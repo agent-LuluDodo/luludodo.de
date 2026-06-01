@@ -77,11 +77,12 @@
             align-items: start;
             margin: 3px 0;
             position: relative;
-            :first-child {
+            
+            > :first-child {
                 vertical-align: top;
             }
             
-            :last-child {
+            > :last-child {
                 * {
                     margin: 0;
                 }
@@ -156,18 +157,25 @@ body {
     }
 }
 
+.fancy {
+    margin: 0 auto;
+    
+    .html {
+        background: var(--background);
+    }
+}
+
+.markdown {
+    max-width: calc(100dvw - 42px);
+    padding: 21px;
+    z-index: 0;
+}
+
 .mod-container {
     position: relative;
     
-    .markdown {
-        background: var(--background);
-        max-width: calc(100dvw - 42px);
-        padding: 21px;
-        z-index: 0;
-    }
-    
     .fancy {
-        margin: 0 auto 90px;
+        margin-bottom: 90px;
     }
     
     .buttons {
@@ -350,12 +358,12 @@ header {
     background: var(--alt-background);
     
     > div:not(.header) {
-        min-height: calc(100dvh - 180px);
+        min-height: calc(100dvh - 120px);
     }
 }
 
 footer {
-    height: 120px;
+    height: 60px;
     width: 100vw;
     background: var(--background);
     clip-path: polygon(
@@ -380,6 +388,22 @@ footer {
             3px 15px,
             0px 15px
     );
+    
+    display: flex;
+    flex-direction: row;
+    gap: 90px;
+    align-items: center;
+    justify-content: center;
+    
+    a {
+        padding: 6px 3px 0 6px;
+        display: inline-block;
+    }
+    
+    a:hover {
+        background-color: rgb(from var(--text) calc(255 - r) calc(255 - g) calc(255 - b));
+        filter: invert(1) hue-rotate(180deg);
+    }
 }
 
 .deco {
@@ -569,6 +593,10 @@ footer {
             height: fit-content;
         }
     }
+    
+    footer {
+        gap: 30px;
+    }
 }
 
 .header .deco-img.bottom {
@@ -600,6 +628,17 @@ footer {
             gap: 45px;
         }
     }
+    
+    footer {
+        height: fit-content;
+        flex-direction: column;
+        gap: 9px;
+        padding: 9px 0;
+    }
+    
+    #app > div:not(.header) {
+        min-height: calc(100dvh - 195px);
+    }
 }
 
 .building_entry .html {
@@ -616,4 +655,8 @@ footer {
 
 a {
     cursor: pointer;
+}
+
+.markdown-container > .fancy {
+    padding: 0 0 90px;
 }

@@ -8,6 +8,8 @@ export const paths: Record<string, string> = {
     'test-code': 'test_code',
     'test-markdown': 'test_markdown',
     'lorem-ipsum': 'lorem_ipsum',
+    'privacy-policy': 'privacy_policy',
+    'terms-of-use': 'terms_of_use',
 }
 
 let lastPath: [string, string] | undefined = undefined

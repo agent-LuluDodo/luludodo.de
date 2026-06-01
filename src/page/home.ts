@@ -6,7 +6,7 @@ import text, {FONT_BIG} from '../util/font.ts';
 import {mods} from './mod.ts';
 import {iconButton} from '../util/button.ts';
 
-const style: Style = {
+export const style: Style = {
     text: '#FFF',
     altText: '#AAA',
     background: '#433f66',

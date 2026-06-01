@@ -7,4 +7,4 @@ async function load(app: HTMLElement) {
     })
 }
 
-export default load;
+export default load
