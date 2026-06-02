@@ -227,10 +227,14 @@ export async function endHash(hash: string) {
 
 async function repopulateGlobalButtons(entries: Record<string, string | (() => unknown)>) {
     const globalButtonsDiv = document.getElementById('global-buttons')!
+    let newChildren = 0
     for (let i = globalButtonsDiv.childNodes.length - 1; i >= 0; i--) {
         globalButtonsDiv.removeChild(globalButtonsDiv.childNodes[i])
+        newChildren--
     }
     for (const [icon, link] of Object.entries(entries)) {
         globalButtonsDiv.appendChild(await iconButton(icon, link))
+        newChildren++
     }
+    globalButtonsDiv.parentElement!.scrollLeft += newChildren * 45
 }
