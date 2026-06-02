@@ -205,21 +205,31 @@ body {
 }
 
 .button {
-    display: inline-block;
+    display: flex;
+    gap: 3px;
     margin: 0;
     background: var(--background);
     
-    canvas {
+    canvas, .icon-loading {
         display: block;
+        margin: 6px 6px 6px 6px;
     }
-}
-
-.text-button {
-    padding: 9px 6px 0 9px;
-}
-
-.icon-button {
-    padding: 6px 6px 6px 6px;
+    
+    :not(:first-child) {
+        margin-left: 0 !important;
+    }
+    
+    :not(:last-child) {
+        margin-right: 0 !important;
+    }
+    
+    .text:not(:first-child) {
+        margin-left: 3px !important;
+    }
+    
+    .text {
+        margin: 9px 6px 0 9px
+    }
 }
 
 .button:hover, .button:focus-visible {
@@ -642,10 +652,9 @@ footer {
 }
 
 .building_entry .html {
-    padding: 6px 3px 3px 6px;
     background: var(--background);
-    height: 30px;
-    width: 30px;
+    height: 39px;
+    width: 39px;
 }
 
 .icon-loading {
@@ -659,4 +668,17 @@ a {
 
 .markdown-container > .fancy {
     padding: 0 0 90px;
+}
+
+#popup {
+    position: fixed;
+    z-index: 100;
+    top: 0;
+    left: 0;
+    width: 100dvw;
+    height: 100dvh;
+}
+
+#popup:empty {
+    display: none;
 }

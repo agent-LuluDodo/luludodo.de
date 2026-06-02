@@ -7,6 +7,9 @@ import deco from '../util/deco.ts';
 import {iconButton} from '../util/button.ts';
 import error from '../error/error.ts';
 import {getLink} from '../util/link.ts';
+import * as Modrinth from '../api/modrinth.ts';
+import * as Curseforge from '../api/cfwidget.ts';
+import * as Github from '../api/github.ts';
 
 export const mods: Record<string, Mod> = {
     ImproveMyMenus: {
@@ -20,10 +23,9 @@ export const mods: Record<string, Mod> = {
             link: '#000'
         },
         invertLinks: true,
-        download: 'https://modrinth.com/mod/improvemymenus#download',
-        modrinth: 'https://modrinth.com/mod/improvemymenus',
-        curseforge: 'https://www.curseforge.com/minecraft/mc-mods/improvemymenus',
-        github: 'https://github.com/agent-LuluDodo/ImproveMyMenus'
+        modrinth: 'improvemymenus',
+        curseforge: 'improvemymenus',
+        github: 'ImproveMyMenus'
     },
     RebindMyKeys: {
         name: 'RebindMyKeys',
@@ -35,9 +37,8 @@ export const mods: Record<string, Mod> = {
             altBackground: '#000',
             link: '#7AF'
         },
-        download: 'https://modrinth.com/mod/rebindmykeys#download',
-        modrinth: 'https://modrinth.com/mod/rebindmykeys',
-        github: 'https://github.com/agent-LuluDodo/RebindMyKeys'
+        modrinth: 'rebindmykeys',
+        github: 'RebindMyKeys'
     },
     DefinitelyMyCoords: {
         name: 'DefinitelyMyCoords',
@@ -49,9 +50,8 @@ export const mods: Record<string, Mod> = {
             altBackground: '#AAA',
             link: '#AAA'
         },
-        download: 'https://modrinth.com/mod/rebindmykeys#download',
-        modrinth: 'https://modrinth.com/mod/rebindmykeys',
-        github: 'https://github.com/agent-LuluDodo/RebindMyKeys'
+        modrinth: 'definitelymycoords',
+        github: 'DefinitelyMyCoords'
     }
 }
 
@@ -76,7 +76,6 @@ type Mod = {
     id: string
     style: Style
     invertLinks?: boolean
-    download?: string
     modrinth?: string
     curseforge?: string
     github?: string
@@ -119,18 +118,67 @@ async function load(app: HTMLElement, subpath: string) {
 
     const buttonsDiv = document.createElement('div')
     buttonsDiv.classList.add('buttons')
-    if (mod.download) {
-        buttonsDiv.appendChild(await iconButton('download', mod.download))
+
+    const downloadButton = await iconButton('download', 'javascript:void(0)')
+    buttonsDiv.appendChild(downloadButton)
+
+    let downloads = 0
+    let downloadsText: HTMLElement | null = null
+    async function updateDownloads(add: number) {
+        downloads += add
+        const newDownloadsText = await text('' + downloads)
+        if (downloadsText === null) {
+            const child = downloadButton.children[0]
+            downloadButton.insertBefore(newDownloadsText, child)
+        } else {
+            downloadsText.replaceWith(newDownloadsText)
+        }
+        downloadsText = newDownloadsText
     }
+
+    let downloadLink = false
     if (mod.modrinth) {
-        buttonsDiv.appendChild(await iconButton('modrinth', mod.modrinth))
+        buttonsDiv.appendChild(await iconButton('modrinth', 'https://modrinth.com/mod/' + mod.modrinth))
+        downloadLink = true
+        downloadButton.href = `https://modrinth.com/mod/${mod.modrinth}#download`
+
+        Modrinth.getProject(mod.modrinth, async response => {
+            await updateDownloads(response.downloads)
+        })
     }
     if (mod.curseforge) {
-        buttonsDiv.appendChild(await iconButton('curseforge', mod.curseforge))
+        buttonsDiv.appendChild(await iconButton('curseforge', 'https://curseforge.com/minecraft/mc-mods/' + mod.curseforge))
+        if (!downloadLink) {
+            downloadLink = true
+            downloadButton.href = 'https://www.curseforge.com/minecraft/mc-mods/improvemymenus'
+        }
+
+        Curseforge.getProject(mod.curseforge, async response => {
+            await updateDownloads(response.downloads.total)
+        })
     }
     if (mod.github) {
-        buttonsDiv.appendChild(await iconButton('github', mod.github))
+        buttonsDiv.appendChild(await iconButton('github', 'https://github.com/agent-LuluDodo/' + mod.github))
+        if (!downloadLink) {
+            downloadLink = true
+            downloadButton.href = `https://github.com/agent-LuluDodo/${mod.github}/releases`
+        }
+
+        Github.getReleases('agent-LuluDodo', mod.github, async response => {
+            let downloads = 0
+            for (const release of response) {
+                for (const asset of release.assets) {
+                    downloads += asset.download_count
+                }
+            }
+            await updateDownloads(downloads)
+        })
     }
+
+    if (!downloadLink) {
+        downloadButton.style.display = 'none'
+    }
+
     allButtonsDiv.appendChild(buttonsDiv)
 
     const globalButtonDiv = document.createElement('div')
@@ -152,20 +200,28 @@ async function load(app: HTMLElement, subpath: string) {
     container.appendChild(markdownDiv)
     app.appendChild(container)
 
+    const popup = document.createElement('div')
+    popup.id = 'popup'
+    app.appendChild(popup)
+
     app.appendChild(await footer())
 }
 
 export default load;
 
 export async function startHash(hash: string) {
-    if (hash === 'more') {
-        await repopulateGlobalButtons(moreButtons)
+    switch (hash) {
+        case 'more':
+            await repopulateGlobalButtons(moreButtons)
+            break;
     }
 }
 
 export async function endHash(hash: string) {
-    if (hash === 'more') {
-        await repopulateGlobalButtons(globalButtons)
+    switch (hash) {
+        case 'more':
+            await repopulateGlobalButtons(globalButtons)
+            break;
     }
 }
 

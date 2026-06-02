@@ -1,0 +1,78 @@
+type User = {
+    login: string,
+    id: number,
+    node_id: string,
+    avatar_url: string,
+    gravatar_id: string,
+    url: string,
+    html_url: string,
+    followers_url: string,
+    following_url: string,
+    gists_url: string,
+    starred_url: string,
+    subscriptions_url: string,
+    organizations_url: string,
+    repos_url: string,
+    events_url: string,
+    received_events_url: string,
+    type: string,
+    user_view_type: string,
+    site_admin: boolean,
+}
+
+type Release = {
+    url: string,
+    assets_url: string,
+    upload_url: string,
+    html_url: string,
+    id: number,
+    author: User,
+    node_id: string,
+    tag_name: string,
+    target_commitish: string,
+    name: string,
+    draft: boolean,
+    immutable: boolean,
+    prerelease: boolean,
+    created_at: string,
+    updated_at: string,
+    published_at: string,
+    assets: {
+        url: string,
+        id: number,
+        node_id: string,
+        name: string,
+        label: string,
+        uploader: User,
+        content_type: string,
+        state: string,
+        size: number,
+        digest: string,
+        download_count: number,
+        created_at: string,
+        updated_at: string,
+        browser_download_url: string,
+    }[],
+    tarball_url: string,
+    zipball_url: string,
+    body: string,
+}
+
+export function getReleases(user: string, id: string, onsuccess: (response: Release[]) => unknown) {
+    request('GET', `repos/${user}/${id}/releases`, null, onsuccess)
+}
+
+export default function request(method: 'GET', url: string, body: object | null, onsuccess: (response: any) => unknown) {
+    const request = new XMLHttpRequest()
+    request.onreadystatechange = function () {
+        if (request.readyState === XMLHttpRequest.DONE && request.status === 200) {
+            if (request.status === 200) {
+                onsuccess(JSON.parse(request.responseText))
+            } else {
+                console.error(`Request for '${url}' failed: ${request.status} ${request.statusText}`)
+            }
+        }
+    }
+    request.open(method, 'https://api.github.com/' + url)
+    request.send(JSON.stringify(body))
+}
