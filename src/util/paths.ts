@@ -41,6 +41,8 @@ async function navigate() {
             await endHash(lastHash)
             lastHash = hash
             await startHash(hash)
+        } else {
+            window.scrollTo(0, 0)
         }
     }
 
@@ -80,8 +82,6 @@ async function getModule(path: string) {
 }
 
 export async function load(path: string, subpath: string) {
-    window.scrollTo(0, 0)
-
     pauseTitleUpdates()
     resetTitle()
 
@@ -94,6 +94,8 @@ export async function load(path: string, subpath: string) {
     app.id = 'app'
     applyStyle()
     oldApp.replaceWith(app)
+
+    window.scrollTo(0, 0)
 
     resumeTitleUpdates()
 }
