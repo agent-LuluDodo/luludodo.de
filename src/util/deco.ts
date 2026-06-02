@@ -146,7 +146,7 @@ function add(grid: HTMLElement, prefix: string | undefined, info: DecoInfo, dire
     } else {
         src = `/deco/${info.prefix}/${imgName}.png`
     }
-    grid.appendChild(icon(src, alt ? getStyle().altBackground : getStyle().background, 0, 0, ['deco-img', direction, ...classes], undefined, canvas => {
+    grid.appendChild(icon(src, alt ? getStyle().altBackground : getStyle().background, 0, 0, undefined, ['deco-img', direction, ...classes], undefined, canvas => {
         switch (direction) {
             case 'left':
                 grid.style.marginLeft = '-' + canvas.width + 'px'

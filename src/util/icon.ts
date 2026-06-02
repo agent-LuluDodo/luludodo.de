@@ -1,6 +1,8 @@
-export default function icon(src: string, color: string, width: number = 0, height: number = 0, classList?: string[], fallback?: string, onload?: (canvas: HTMLCanvasElement) => unknown) {
+export default function icon(src: string, color: string, width: number = 0, height: number = 0, alt?: string, classList?: string[], fallback?: string, onload?: (canvas: HTMLCanvasElement) => unknown) {
     const img = document.createElement('img')
     img.src = src
+    if (alt) img.ariaLabel = alt
+    else img.ariaHidden = 'true'
     img.classList.add('icon-loading')
     if (classList) img.classList.add(...classList)
     img.style.width = width * 3 + 'px'
@@ -18,6 +20,8 @@ export default function icon(src: string, color: string, width: number = 0, heig
 
         canvas.className = img.className
         canvas.classList.remove('icon-loading')
+        canvas.ariaLabel = img.ariaLabel
+        canvas.ariaHidden = img.ariaHidden
         img.replaceWith(canvas)
 
         if (onload) onload(canvas)

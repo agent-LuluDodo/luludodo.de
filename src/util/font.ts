@@ -321,21 +321,25 @@ export default async function text(text: string | TextComponent | Text, height: 
         text = [text]
     }
 
-    const font = mono ? parsedMonoFonts[height] : parsedFonts[height];
-    const image = await font.image;
+    const font = mono ? parsedMonoFonts[height] : parsedFonts[height]
+    const image = await font.image
 
-    const sections: RenderableTextSection[] = [];
+    const sections: RenderableTextSection[] = []
 
-    let textWidth = 0;
-    let textHeight = 0;
-    let lineWidth = 0;
+    let label = ''
+
+    let textWidth = 0
+    let textHeight = 0
+    let lineWidth = 0
     for (const component of text) {
-        let x = lineWidth;
-        let start = 0;
+        let x = lineWidth
+        let start = 0
+
+        label += component.content
 
         const chars = component.content.split('');
         for (let i = 0; i < chars.length; i++) {
-            const char = chars[i];
+            const char = chars[i]
             if (char == ' ') {
                 lineWidth += font.space
             } else if (char == '\n') {
@@ -351,11 +355,11 @@ export default async function text(text: string | TextComponent | Text, height: 
                     });
                 }
 
-                x = 0;
-                start = i + 1;
-                textWidth = Math.max(textWidth, lineWidth);
-                lineWidth = -font.gap;
-                textHeight += height + font.line;
+                x = 0
+                start = i + 1
+                textWidth = Math.max(textWidth, lineWidth)
+                lineWidth = -font.gap
+                textHeight += height + font.line
             } else {
                 let entry: { x: number, width: number } | undefined = undefined;
                 if (i < chars.length - 1) {
@@ -385,10 +389,11 @@ export default async function text(text: string | TextComponent | Text, height: 
             });
         }
     }
-    textWidth = Math.max(textWidth, lineWidth);
-    textHeight += height + font.line;
+    textWidth = Math.max(textWidth, lineWidth)
+    textHeight += height + font.line
 
     const canvas = document.createElement('canvas')
+    canvas.ariaLabel = label
     canvas.classList = 'text'
     canvas.width = textWidth * SCALE
     canvas.height = textHeight * SCALE

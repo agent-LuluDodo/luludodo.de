@@ -1,6 +1,12 @@
 <!doctype html>
 <html lang="en">
   <head>
+    <link rel="preload" href="/font/small.png" as="image"/>
+    <link rel="preload" href="/font/small-mono.png" as="image"/>
+    <link rel="preload" href="/font/normal.png" as="image"/>
+    <link rel="preload" href="/font/normal-mono.png" as="image"/>
+    <link rel="preload" href="/font/big.png" as="image"/>
+    <link rel="preload" href="/font/big-mono.png" as="image"/>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/png" href="/favicon/favicon-96x96.png" sizes="96x96" />
     <link rel="icon" type="image/svg+xml" href="/favicon/favicon.svg" />
@@ -10,9 +16,10 @@
     <link rel="manifest" href="/favicon/site.webmanifest" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title id="title">LuluDodo</title>
-    <style>:root{background:#FFF}@media(prefers-color-scheme:dark){:root{background:#000}}</style>
+    <style>:root{background:#FFF}@media(prefers-color-scheme:dark){:root{background:#000}}#loading{position:absolute;left:50dvw;top:50dvh;translate:-50%;}:has(#app>*)>#loading{display:none;}</style>
   </head>
   <body>
+    <img id="loading" src="/icon/loading.gif" alt="Loading..." />
     <div id="app"></div>
     <script type="module" src="/src/main.ts"></script>
   </body>
