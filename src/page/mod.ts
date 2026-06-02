@@ -10,6 +10,7 @@ import {getLink} from '../util/link.ts';
 import * as Modrinth from '../api/modrinth.ts';
 import * as Curseforge from '../api/cfwidget.ts';
 import * as Github from '../api/github.ts';
+import setTitle from '../util/title.ts';
 
 export const mods: Record<string, Mod> = {
     ImproveMyMenus: {
@@ -103,6 +104,7 @@ async function load(app: HTMLElement, subpath: string) {
     curMod = mod
 
     setStyle(mod.style)
+    setTitle(mod.name)
 
     app.appendChild(await header())
 

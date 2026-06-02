@@ -5,6 +5,7 @@ import deco from '../util/deco.ts';
 import text, {FONT_BIG} from '../util/font.ts';
 import {mods} from './mod.ts';
 import {iconButton} from '../util/button.ts';
+import setTitle from '../util/title.ts';
 
 export const style: Style = {
     text: '#FFF',
@@ -23,6 +24,7 @@ const socials = {
 
 async function load(app: HTMLElement) {
     setStyle(style)
+    setTitle('Home')
 
     app.appendChild(await header())
 

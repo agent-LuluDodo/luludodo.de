@@ -4,6 +4,7 @@ import header from '../util/header.ts';
 import footer from '../util/footer.ts';
 import deco from '../util/deco.ts';
 import {mods} from './mod.ts';
+import setTitle from '../util/title.ts';
 
 const style: Style = {
     text: '#FFF',
@@ -15,6 +16,7 @@ const style: Style = {
 
 async function load(app: HTMLElement) {
     setStyle(style)
+    setTitle('Mods')
 
     app.appendChild(await header())
 

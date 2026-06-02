@@ -1,4 +1,5 @@
 import {applyStyle} from './style.ts';
+import {pauseTitleUpdates, resetTitle, resumeTitleUpdates} from './title.ts';
 
 export const paths: Record<string, string> = {
     '': 'home',
@@ -81,6 +82,9 @@ async function getModule(path: string) {
 export async function load(path: string, subpath: string) {
     window.scrollTo(0, 0)
 
+    pauseTitleUpdates()
+    resetTitle()
+
     const oldApp = document.getElementById('app')!
     const app = document.createElement('div')
 
@@ -90,6 +94,8 @@ export async function load(path: string, subpath: string) {
     app.id = 'app'
     applyStyle()
     oldApp.replaceWith(app)
+
+    resumeTitleUpdates()
 }
 
 export async function startHash(hash: string) {
