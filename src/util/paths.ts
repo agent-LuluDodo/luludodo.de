@@ -95,6 +95,9 @@ export async function load(path: string, subpath: string) {
     applyStyle()
     oldApp.replaceWith(app)
 
+    const loading = document.getElementById('loading')
+    if (loading) loading.remove()
+
     window.scrollTo(0, 0)
 
     resumeTitleUpdates()
