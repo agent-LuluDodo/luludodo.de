@@ -673,6 +673,21 @@ a {
     padding: 0 0 90px;
 }
 
+#progress {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    z-index: 1;
+    
+    > * {
+        background-color: var(--text);
+        transition: width 100ms ease-out;
+        height: 100%;
+    }
+}
+
 #popup {
     position: fixed;
     z-index: 100;

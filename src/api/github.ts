@@ -1,3 +1,5 @@
+import request from '../util/request.ts';
+
 type User = {
     login: string,
     id: number,
@@ -59,20 +61,5 @@ type Release = {
 }
 
 export function getReleases(user: string, id: string, onsuccess: (response: Release[]) => unknown) {
-    request('GET', `repos/${user}/${id}/releases`, null, onsuccess)
-}
-
-export default function request(method: 'GET', url: string, body: object | null, onsuccess: (response: any) => unknown) {
-    const request = new XMLHttpRequest()
-    request.onreadystatechange = function () {
-        if (request.readyState === XMLHttpRequest.DONE && request.status === 200) {
-            if (request.status === 200) {
-                onsuccess(JSON.parse(request.responseText))
-            } else {
-                console.error(`Request for '${url}' failed: ${request.status} ${request.statusText}`)
-            }
-        }
-    }
-    request.open(method, 'https://api.github.com/' + url)
-    request.send(JSON.stringify(body))
+    request('GET', `https://api.github.com/repos/${user}/${id}/releases`, null, onsuccess)
 }

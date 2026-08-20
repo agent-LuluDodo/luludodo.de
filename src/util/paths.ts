@@ -1,5 +1,6 @@
 import {applyStyle} from './style.ts';
 import {pauseTitleUpdates, resetTitle, resumeTitleUpdates} from './title.ts';
+import progress from './progress.ts';
 
 export const paths: Record<string, string> = {
     '': 'home',
@@ -45,7 +46,6 @@ async function navigate() {
             window.scrollTo(0, 0)
         }
     }
-
 }
 
 export async function init() {
@@ -81,24 +81,47 @@ async function getModule(path: string) {
         await import(`../page/${file}.ts`)
 }
 
+let curIndex = 0;
+
 export async function load(path: string, subpath: string) {
     pauseTitleUpdates()
     resetTitle()
 
+    const index = ++curIndex;
+
+    if (index < curIndex) return;
+    progress(0)
+
     const oldApp = document.getElementById('app')!
     const app = document.createElement('div')
 
+    if (index < curIndex) return;
+    progress(0.1)
+
     const module = await getModule(path)
+
+    if (index < curIndex) return;
+    progress(0.5)
+
     await module.default(app, subpath)
+
+    if (index < curIndex) return;
+    progress(0.8)
 
     app.id = 'app'
     applyStyle()
     oldApp.replaceWith(app)
 
+    if (index < curIndex) return;
+    progress(0.9)
+
     const loading = document.getElementById('loading')
     if (loading) loading.remove()
 
     window.scrollTo(0, 0)
+
+    if (index < curIndex) return;
+    progress(1.0)
 
     resumeTitleUpdates()
 }
