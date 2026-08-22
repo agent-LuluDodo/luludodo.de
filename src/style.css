@@ -673,6 +673,29 @@ a {
     padding: 0 0 90px;
 }
 
+.java-bytecode-editor > #upload-prompt {
+    display: block;
+    margin: 0 auto;
+    width: min-content;
+    
+    .html {
+        background-color: var(--background);
+    }
+}
+
+.wip-content {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    
+    canvas {
+        display: block;
+        position: relative;
+        margin: auto;
+        padding-bottom: 32px;
+    }
+}
+
 #progress {
     position: fixed;
     top: 0;

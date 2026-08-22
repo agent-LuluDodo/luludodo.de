@@ -2,13 +2,21 @@ import {getStyle} from './style.ts';
 import text from './font.ts';
 import icon from './icon.ts';
 
-export async function textButton(name: string, link: string) {
+export async function textButton(name: string, link: string | (() => unknown)) {
     const button = document.createElement('a')
     button.classList.add('text-button', 'button', 'corner-1')
     button.appendChild(await text({
         content: name
     }))
-    button.href = link
+    if (typeof link === 'string') {
+        button.href = link
+    } else {
+        button.onclick = async e => {
+            e.preventDefault()
+            e.stopImmediatePropagation()
+            await link()
+        }
+    }
     return button
 }
 

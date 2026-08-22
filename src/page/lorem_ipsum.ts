@@ -98,7 +98,10 @@ async function load(app: HTMLElement, subpath: string) {
     await timed(app, async app => {
         const height = parseFloat(subpath)
         const container = document.createElement('div')
-        const loremIpsum = await text(
+        const loremIpsum = isNaN(height) ? await text(
+            loremIpsumText,
+            subpath
+        ) : await text(
             loremIpsumText,
             height,
             subpath.endsWith('mono')

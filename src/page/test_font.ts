@@ -3,12 +3,16 @@ import text, {FONT_BIG, FONT_NORMAL, FONT_SMALL} from '../util/font.ts';
 async function load(app: HTMLElement) {
     await timed(app, async app => {
         app.style.overflowX = 'auto'
-        app.appendChild(await text('Big: abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ.,!?:;1234567890/\\<>|"\'´`=%$§&{}()[]+-*~#_^°©®@-><-=><=:):(', FONT_BIG, false))
-        app.appendChild(await text('Big Mono: abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ.,!?:;1234567890/\\<>|"\'´`=%$§&{}()[]+-*~#_^°©®@==!=<=>=||-><-=><>', FONT_BIG, true))
-        app.appendChild(await text('Normal: abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ.,!?:;1234567890/\\<>|"\'´`=%$§&{}()[]+-*~#_^°©®@-><-=><=:):(', FONT_NORMAL, false))
-        app.appendChild(await text('Normal Mono: abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ.,!?:;1234567890/\\<>|"\'´`=%$§&{}()[]+-*~#_^°©®@==!=<=>=||-><-=><>', FONT_NORMAL, true))
-        app.appendChild(await text('Small: abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ.,!?:;1234567890/\\<>|"\'´`=%$§&{}()[]+-*~#_^°©®@-><-=><=:):(', FONT_SMALL, false))
-        app.appendChild(await text('Small Mono: abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ.,!?:;1234567890/\\<>|"\'´`=%$§&{}()[]+-*~#_^°©®@==!=<=>=||-><-=><>', FONT_SMALL, true))
+        app.appendChild(await text('Big: abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ.,!?:;1234567890/\\<>|"\'´`=%$§&{}()[]+-*~#_^°©®@\uFFFD-><-=><=:):(', FONT_BIG, false))
+        app.appendChild(await text('Big Mono: abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ.,!?:;1234567890/\\<>|"\'´`=%$§&{}()[]+-*~#_^°©®@\uFFFD==!=<=>=||-><-=><>', FONT_BIG, true))
+        app.appendChild(await text('Normal: abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ.,!?:;1234567890/\\<>|"\'´`=%$§&{}()[]+-*~#_^°©®@\uFFFD-><-=><=:):(', FONT_NORMAL, false))
+        app.appendChild(await text('Normal Mono: abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ.,!?:;1234567890/\\<>|"\'´`=%$§&{}()[]+-*~#_^°©®@\uFFFD==!=<=>=||-><-=><>', FONT_NORMAL, true))
+        app.appendChild(await text('Small: abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ.,!?:;1234567890/\\<>|"\'´`=%$§&{}()[]+-*~#_^°©®@\uFFFD-><-=><=:):(', FONT_SMALL, false))
+        app.appendChild(await text('Small Mono: abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ.,!?:;1234567890/\\<>|"\'´`=%$§&{}()[]+-*~#_^°©®@\uFFFD==!=<=>=||-><-=><>', FONT_SMALL, true))
+        app.appendChild(await text('Tiny-1: abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ.,!?:;1234567890/\\<>|"\'´`=%$§&{}()[]+-*~#_^°©®@\uFFFD', 'tiny-1'))
+        app.appendChild(await text('Tiny-2: abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ.,!?:;1234567890/\\<>|"\'´`=%$§&{}()[]+-*~#_^°©®@\uFFFD', 'tiny-2'))
+        app.appendChild(await text('Tiny-3: abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ.,!?:;1234567890/\\<>|"\'´`=%$§&{}()[]+-*~#_^°©®@\uFFFD', 'tiny-3'))
+        app.appendChild(await text('Tiny: abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ.,!?:;1234567890/\\<>|"\'´`=%$§&{}()[]+-*~#_^°©®@\uFFFD', 'tiny'))
         app.appendChild(await text([{
             content: 'My super amazing title!11!!!!',
             color: '#F00',
@@ -45,6 +49,15 @@ async function load(app: HTMLElement) {
             content: '\n...\n\nBad chars: äüößÄÜÖ\0',
             color: '#FFF7'
         }], FONT_SMALL))
+        app.appendChild(await text([{
+            content: 'I\'m really tiny ;)',
+        }, {
+            content: '\n\nHopefully you can still read me!'
+        }, {
+            content: '\ncontact@luludodo.de - https://luludodo.de - © Luca Dornseifer'
+        }, {
+            content: '\n\nProbably my favorite part of this font is the question mark, I really like how it looks :).\nI came to be, when I accidentally drew that shape and thought, hey that kinda looks like a question mark.\nAnd then I ended up drawing several tiny fonts, because why not?'
+        }], 'tiny'))
     })
 }
 
@@ -56,6 +69,9 @@ export async function timed(app: HTMLElement, action: (app: HTMLElement) => unkn
     await text('', FONT_NORMAL, true);
     await text('', FONT_SMALL, false);
     await text('', FONT_SMALL, true);
+    await text('', 'tiny-1');
+    await text('', 'tiny-2');
+    await text('', 'tiny-3');
     const renderMs = performance.now();
     await action(app);
     const info = document.createElement('div')

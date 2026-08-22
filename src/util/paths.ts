@@ -6,12 +6,14 @@ export const paths: Record<string, string> = {
     '': 'home',
     'mod': 'mod',
     'mods': 'mods',
-    'test-font': 'test_font',
-    'test-code': 'test_code',
-    'test-markdown': 'test_markdown',
     'lorem-ipsum': 'lorem_ipsum',
     'privacy-policy': 'privacy_policy',
     'terms-of-use': 'terms_of_use',
+    'java-bytecode-viewer': 'wip',
+    'test-font': 'test_font',
+    'test-code': 'test_code',
+    'test-markdown': 'test_markdown',
+    'test-wip': 'wip',
 }
 
 let lastPath: [string, string] | undefined = undefined

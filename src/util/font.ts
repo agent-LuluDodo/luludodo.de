@@ -2,7 +2,7 @@
 import {onChange} from './style.ts';
 import rel from './link.ts';
 
-const chars = [...'\0abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ.,!?:;1234567890/\\<>|"\'´`=%$§&{}()[]+-*~#_^°©®@'.split('')];
+const chars = [...'\0abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ.,!?:;1234567890/\\<>|"\'´`=%$§&{}()[]+-*~#_^°©®@\uFFFD'.split('')];
 
 type Font = {
     file: string
@@ -18,6 +18,10 @@ type Font = {
         gap: number
     }[],
     ligatures: string[]
+}
+
+type SpecialFont = Font & {
+    name: string
 }
 
 type MonoFont = {
@@ -37,7 +41,7 @@ const fonts: Font[] = [{
     space: 3,
     gap: 1,
     underline: 10,
-    widths: [6, 7, 6, 6, 7, 6, 4, 6, 6, 1, 3, 5, 4, 8, 6, 6, 6, 6, 5, 6, 5, 6, 7, 7, 5, 7, 6, 6, 6, 6, 6, 5, 7, 6, 6, 3, 5, 5, 5, 7, 7, 6, 6, 7, 6, 6, 7, 6, 7, 7, 5, 5, 5, 1, 2, 1, 5, 1, 2, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 5, 5, 4, 4, 1, 3, 1, 2, 2, 6, 9, 5, 6, 7, 3, 3, 2, 2, 2, 2, 7, 6, 3, 7, 6, 6, 3, 3, 9, 9, 9, 10, 10, 10, 10, 8, 8],
+    widths: [6, 7, 6, 6, 7, 6, 4, 6, 6, 1, 3, 5, 4, 8, 6, 6, 6, 6, 5, 6, 5, 6, 7, 7, 5, 7, 6, 6, 6, 6, 6, 5, 7, 6, 6, 3, 5, 5, 5, 7, 7, 6, 6, 7, 6, 6, 7, 6, 7, 7, 5, 5, 5, 1, 2, 1, 5, 1, 2, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 5, 5, 4, 4, 1, 3, 1, 2, 2, 6, 9, 5, 6, 7, 3, 3, 2, 2, 2, 2, 7, 6, 3, 7, 6, 6, 3, 3, 9, 9, 9, 7, 10, 10, 10, 10, 8, 8],
     gapOverrides: [{
         first: 'f',
         second: 'acdefgjmnopqrsuvwxyzJ.,/<>=+-~_',
@@ -49,6 +53,14 @@ const fonts: Font[] = [{
     }, {
         first: 'adl',
         second: 'ftFTVWY',
+        gap: 0
+    }, {
+        first: '-',
+        second: '-',
+        gap: 0
+    }, {
+        first: '_',
+        second: '_',
         gap: 0
     }],
     ligatures: ['->', '<-', '=>', '<=', ':)', ':(']
@@ -59,7 +71,7 @@ const fonts: Font[] = [{
     space: 2,
     gap: 1,
     underline: 8,
-    widths: [5, 6, 5, 5, 6, 5, 4, 5, 5, 1, 2, 4, 3, 7, 5, 5, 5, 5, 4, 4, 3, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 4, 4, 5, 5, 3, 4, 4, 4, 5, 5, 5, 5, 6, 5, 5, 5, 5, 5, 7, 5, 5, 5, 1, 1, 1, 5, 1, 1, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 3, 3, 3, 3, 1, 3, 1, 2, 2, 5, 7, 5, 5, 6, 3, 3, 2, 2, 2, 2, 5, 5, 3, 7, 5, 5, 3, 3, 7, 7, 7, 9, 9, 9, 9, 6, 6],
+    widths: [5, 6, 5, 5, 6, 5, 4, 5, 5, 1, 2, 4, 3, 7, 5, 5, 5, 5, 4, 4, 3, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 4, 4, 5, 5, 3, 4, 4, 4, 5, 5, 5, 5, 6, 5, 5, 5, 5, 5, 7, 5, 5, 5, 1, 1, 1, 5, 1, 1, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 3, 3, 3, 3, 1, 3, 1, 2, 2, 5, 7, 5, 5, 6, 3, 3, 2, 2, 2, 2, 5, 5, 3, 7, 5, 5, 3, 3, 7, 7, 7, 7, 9, 9, 9, 9, 6, 6],
     gapOverrides: [{
         first: 'f',
         second: 'acdefgjmnopqrsuvwxyzJ.,/<>=+-~_',
@@ -72,6 +84,14 @@ const fonts: Font[] = [{
         first: 'adl',
         second: 'ftFTVWY',
         gap: 0
+    }, {
+        first: '-',
+        second: '-',
+        gap: 0
+    }, {
+        first: '_',
+        second: '_',
+        gap: 0
     }],
     ligatures: ['->', '<-', '=>', '<=', ':)', ':(']
 }, {
@@ -81,7 +101,7 @@ const fonts: Font[] = [{
     space: 2,
     gap: 1,
     underline: 7,
-    widths: [4, 5, 4, 3, 5, 4, 3, 4, 4, 1, 2, 3, 2, 6, 4, 4, 4, 4, 3, 4, 3, 4, 5, 5, 3, 5, 4, 4, 4, 4, 4, 4, 5, 4, 4, 3, 3, 4, 4, 5, 5, 4, 4, 5, 4, 4, 5, 4, 5, 7, 5, 5, 4, 1, 1, 1, 4, 1, 1, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 3, 3, 3, 3, 1, 3, 1, 2, 2, 4, 6, 4, 4, 5, 3, 3, 2, 2, 2, 2, 5, 4, 3, 5, 5, 4, 3, 3, 6, 6, 6, 8, 8, 8, 8, 5, 5],
+    widths: [4, 5, 4, 3, 5, 4, 3, 4, 4, 1, 2, 3, 2, 6, 4, 4, 4, 4, 3, 4, 3, 4, 5, 5, 3, 5, 4, 4, 4, 4, 4, 4, 5, 4, 4, 3, 3, 4, 4, 5, 5, 4, 4, 5, 4, 4, 5, 4, 5, 7, 5, 5, 4, 1, 1, 1, 4, 1, 1, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 3, 3, 3, 3, 1, 3, 1, 2, 2, 4, 6, 4, 4, 5, 3, 3, 2, 2, 2, 2, 5, 4, 3, 5, 5, 4, 3, 3, 6, 6, 6, 5, 8, 8, 8, 8, 5, 5],
     gapOverrides: [{
         first: 'abcdefhuiklmnoprstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ/\\<>|"\'´`=+-*~^°1234567890',
         second: 'j',
@@ -89,6 +109,14 @@ const fonts: Font[] = [{
     }, {
         first: 'l',
         second: 'ftFTVWY',
+        gap: 0
+    }, {
+        first: '-',
+        second: '-',
+        gap: 0
+    }, {
+        first: '_',
+        second: '_',
         gap: 0
     }],
     ligatures: ['->', '<-', '=>', '<=', ':)', ':(']
@@ -120,9 +148,72 @@ const monoFonts: MonoFont[] = [{
     ligatures: ['==', '!=', '<=', '>=', '||', '->', '<-', '=>', '<>']
 }]
 
+const specialFonts: SpecialFont[] = [{
+    file: 'font/tiny1.png',
+    name: 'tiny-1',
+    height: 5,
+    line: 1,
+    space: 1,
+    gap: 1,
+    underline: 4,
+    widths: [3, 3, 3, 2, 3, 3, 3, 3, 3, 1, 2, 3, 2, 3, 3, 3, 3, 3, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2, 3, 2, 2, 3, 3, 1, 2, 3, 2, 3, 3, 3, 3, 3, 3, 2, 3, 3, 3, 3, 3, 3, 2, 1, 1, 1, 2, 1, 1, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2, 2, 1, 3, 1, 2, 2, 3, 3, 3, 3, 3, 3, 3, 2, 2, 2, 2, 3, 2, 3, 3, 3, 3, 3, 2, 3, 3, 3, 3],
+    gapOverrides: [{
+        first: '/',
+        second: '/',
+        gap: 0
+    }],
+    ligatures: []
+}, {
+    file: 'font/tiny2.png',
+    name: 'tiny-2',
+    height: 5,
+    line: 1,
+    space: 1,
+    gap: 1,
+    underline: 4,
+    widths: [3, 3, 3, 2, 3, 3, 3, 3, 3, 1, 2, 3, 2, 3, 3, 3, 3, 3, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2, 3, 3, 3, 3, 3, 1, 2, 3, 3, 3, 3, 3, 3, 3, 3, 2, 3, 3, 3, 3, 3, 3, 2, 1, 1, 1, 2, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 3, 1, 2, 2, 2, 3, 3, 3, 3, 3, 3, 2, 2, 2, 2, 3, 2, 3, 3, 3, 3, 3, 2, 3, 3, 3, 3],
+    gapOverrides: [{
+        first: '/',
+        second: '/',
+        gap: 0
+    }],
+    ligatures: []
+}, {
+    file: 'font/tiny3.png',
+    name: 'tiny-3',
+    height: 5,
+    line: 1,
+    space: 1,
+    gap: 1,
+    underline: 4,
+    widths: [3, 3, 3, 2, 3, 3, 3, 3, 3, 1, 2, 3, 2, 5, 3, 3, 3, 3, 3, 3, 3, 3, 3, 5, 3, 3, 3, 3, 3, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 5, 3, 3, 3, 4, 3, 2, 3, 3, 3, 5 ,3 ,3, 3, 1, 1, 1, 2, 1, 1, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2, 2, 1, 3, 1, 2, 2, 3, 4, 3, 3, 3, 2, 2, 2, 2, 2, 2, 3, 2, 3, 3, 5, 3, 3, 3, 3, 3, 3, 5],
+    gapOverrides: [{
+        first: '/',
+        second: '/',
+        gap: 0
+    }],
+    ligatures: []
+}, {
+    file: 'font/tiny4.png',
+    name: 'tiny',
+    height: 5,
+    line: 1,
+    space: 1,
+    gap: 1,
+    underline: 4,
+    widths: [3, 3, 3, 2, 3, 3, 3, 3, 3, 1, 2, 3, 2, 5, 3, 3, 3, 3, 3, 2, 3, 3, 3, 5, 3, 3, 3, 3, 3, 2, 3, 3, 3, 3, 3, 3, 2, 3, 3, 5, 4, 3, 3, 4, 3, 2, 3, 3, 3, 5 ,3 ,3, 2, 1, 1, 1, 2, 1, 1, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2, 2, 1, 3, 1, 2, 2, 3, 4, 3, 3, 3, 3, 3, 2, 2, 2, 2, 3, 2, 3, 3, 5, 3, 3, 2, 7, 7, 3, 3],
+    gapOverrides: [{
+        first: '/',
+        second: '/',
+        gap: 0
+    }],
+    ligatures: []
+}]
+
 type ParsedFont = {
     image: Promise<ImageBitmap>
     line: number
+    height: number
     space: number
     gap: number
     underline: number
@@ -139,6 +230,8 @@ type CharTable = {
 
 const parsedFonts: Record<number, ParsedFont> = {}
 const parsedMonoFonts: Record<number, ParsedFont> = {}
+
+const specialParsedFonts: Record<string, ParsedFont> = {}
 
 function loadImage(font: Font | MonoFont, mono: boolean, expectedWidth: number): Promise<ImageBitmap> {
     return new Promise((resolve, reject) => {
@@ -157,7 +250,7 @@ function loadImage(font: Font | MonoFont, mono: boolean, expectedWidth: number):
     });
 }
 
-for (const font of fonts) {
+function parse_font(font: Font): ParsedFont {
     const charTable: CharTable = {}
     let i = 0
     let x = 0
@@ -185,15 +278,20 @@ for (const font of fonts) {
 
     const image: Promise<ImageBitmap> = loadImage(font, false, x)
 
-    parsedFonts[font.height] = {
+    return {
         image,
         line: font.line,
+        height: font.height,
         space: font.space,
         gap: font.gap,
         underline: font.underline,
         charTable,
         gapOverrides
     }
+}
+
+for (const font of fonts) {
+    parsedFonts[font.height] = parse_font(font)
 }
 
 for (const monoFont of monoFonts) {
@@ -219,12 +317,17 @@ for (const monoFont of monoFonts) {
     parsedMonoFonts[monoFont.height] = {
         image,
         line: monoFont.line,
+        height: monoFont.height,
         space: monoFont.width,
         gap: monoFont.gap,
         underline: monoFont.underline,
         charTable,
         gapOverrides: {}
     }
+}
+
+for (const specialFont of specialFonts) {
+    specialParsedFonts[specialFont.name] = parse_font(specialFont)
 }
 
 export const FONT_BIG = 12;
@@ -251,7 +354,7 @@ type TextComponent = {
     bold?: boolean
 }
 
-type Text = TextComponent[]
+export type Text = string | TextComponent | TextComponent[]
 
 async function renderSingleSection(ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D, font: ParsedFont, image: ImageBitmap, text: RenderableTextSection, scale: number) {
     let canvasX = 0;
@@ -312,7 +415,9 @@ async function renderSection(ctx: CanvasRenderingContext2D, font: ParsedFont, im
     ctx.drawImage(canvas, 0, 0, text.width, text.height, text.x * SCALE, text.y * SCALE, text.width * SCALE, text.height * SCALE)
 }
 
-export default async function text(text: string | TextComponent | Text, height: number = FONT_NORMAL, mono: boolean = false) {
+export default async function text(text: Text, special: string): Promise<HTMLCanvasElement>;
+export default async function text(text: Text, height?: number, mono?: boolean): Promise<HTMLCanvasElement>;
+export default async function text(text: Text, height: number | string = FONT_NORMAL, mono: boolean = false) {
     if (typeof text === 'string') {
         text = [{
             content: text
@@ -321,7 +426,9 @@ export default async function text(text: string | TextComponent | Text, height: 
         text = [text]
     }
 
-    const font = mono ? parsedMonoFonts[height] : parsedFonts[height]
+    const font = typeof height === 'string' ? specialParsedFonts[height] : mono ? parsedMonoFonts[height] : parsedFonts[height]
+    height = font.height
+
     const image = await font.image
 
     const sections: RenderableTextSection[] = []
