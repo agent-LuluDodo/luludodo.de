@@ -20,10 +20,6 @@ type Font = {
     ligatures: string[]
 }
 
-type SpecialFont = Font & {
-    name: string
-}
-
 type MonoFont = {
     file: string
     height: number
@@ -148,67 +144,68 @@ const monoFonts: MonoFont[] = [{
     ligatures: ['==', '!=', '<=', '>=', '||', '->', '<-', '=>', '<>']
 }]
 
-const specialFonts: SpecialFont[] = [{
-    file: 'font/tiny1.png',
-    name: 'tiny-1',
-    height: 5,
-    line: 1,
-    space: 1,
-    gap: 1,
-    underline: 4,
-    widths: [3, 3, 3, 2, 3, 3, 3, 3, 3, 1, 2, 3, 2, 3, 3, 3, 3, 3, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2, 3, 2, 2, 3, 3, 1, 2, 3, 2, 3, 3, 3, 3, 3, 3, 2, 3, 3, 3, 3, 3, 3, 2, 1, 1, 1, 2, 1, 1, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2, 2, 1, 3, 1, 2, 2, 3, 3, 3, 3, 3, 3, 3, 2, 2, 2, 2, 3, 2, 3, 3, 3, 3, 3, 2, 3, 3, 3, 3],
-    gapOverrides: [{
-        first: '/',
-        second: '/',
-        gap: 0
-    }],
-    ligatures: []
-}, {
-    file: 'font/tiny2.png',
-    name: 'tiny-2',
-    height: 5,
-    line: 1,
-    space: 1,
-    gap: 1,
-    underline: 4,
-    widths: [3, 3, 3, 2, 3, 3, 3, 3, 3, 1, 2, 3, 2, 3, 3, 3, 3, 3, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2, 3, 3, 3, 3, 3, 1, 2, 3, 3, 3, 3, 3, 3, 3, 3, 2, 3, 3, 3, 3, 3, 3, 2, 1, 1, 1, 2, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 3, 1, 2, 2, 2, 3, 3, 3, 3, 3, 3, 2, 2, 2, 2, 3, 2, 3, 3, 3, 3, 3, 2, 3, 3, 3, 3],
-    gapOverrides: [{
-        first: '/',
-        second: '/',
-        gap: 0
-    }],
-    ligatures: []
-}, {
-    file: 'font/tiny3.png',
-    name: 'tiny-3',
-    height: 5,
-    line: 1,
-    space: 1,
-    gap: 1,
-    underline: 4,
-    widths: [3, 3, 3, 2, 3, 3, 3, 3, 3, 1, 2, 3, 2, 5, 3, 3, 3, 3, 3, 3, 3, 3, 3, 5, 3, 3, 3, 3, 3, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 5, 3, 3, 3, 4, 3, 2, 3, 3, 3, 5 ,3 ,3, 3, 1, 1, 1, 2, 1, 1, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2, 2, 1, 3, 1, 2, 2, 3, 4, 3, 3, 3, 2, 2, 2, 2, 2, 2, 3, 2, 3, 3, 5, 3, 3, 3, 3, 3, 3, 5],
-    gapOverrides: [{
-        first: '/',
-        second: '/',
-        gap: 0
-    }],
-    ligatures: []
-}, {
-    file: 'font/tiny4.png',
-    name: 'tiny',
-    height: 5,
-    line: 1,
-    space: 1,
-    gap: 1,
-    underline: 4,
-    widths: [3, 3, 3, 2, 3, 3, 3, 3, 3, 1, 2, 3, 2, 5, 3, 3, 3, 3, 3, 2, 3, 3, 3, 5, 3, 3, 3, 3, 3, 2, 3, 3, 3, 3, 3, 3, 2, 3, 3, 5, 4, 3, 3, 4, 3, 2, 3, 3, 3, 5 ,3 ,3, 2, 1, 1, 1, 2, 1, 1, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2, 2, 1, 3, 1, 2, 2, 3, 4, 3, 3, 3, 3, 3, 2, 2, 2, 2, 3, 2, 3, 3, 5, 3, 3, 2, 7, 7, 3, 3],
-    gapOverrides: [{
-        first: '/',
-        second: '/',
-        gap: 0
-    }],
-    ligatures: []
-}]
+const specialFonts: Record<string, Font> = {
+    'tiny-1': {
+        file: 'font/tiny1.png',
+        height: 5,
+        line: 1,
+        space: 1,
+        gap: 1,
+        underline: 4,
+        widths: [3, 3, 3, 2, 3, 3, 3, 3, 3, 1, 2, 3, 2, 3, 3, 3, 3, 3, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2, 3, 2, 2, 3, 3, 1, 2, 3, 2, 3, 3, 3, 3, 3, 3, 2, 3, 3, 3, 3, 3, 3, 2, 1, 1, 1, 2, 1, 1, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2, 2, 1, 3, 1, 2, 2, 3, 3, 3, 3, 3, 3, 3, 2, 2, 2, 2, 3, 2, 3, 3, 3, 3, 3, 2, 3, 3, 3, 3],
+        gapOverrides: [{
+            first: '/',
+            second: '/',
+            gap: 0
+        }],
+        ligatures: []
+    },
+    'tiny-2': {
+        file: 'font/tiny2.png',
+        height: 5,
+        line: 1,
+        space: 1,
+        gap: 1,
+        underline: 4,
+        widths: [3, 3, 3, 2, 3, 3, 3, 3, 3, 1, 2, 3, 2, 3, 3, 3, 3, 3, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2, 3, 3, 3, 3, 3, 1, 2, 3, 3, 3, 3, 3, 3, 3, 3, 2, 3, 3, 3, 3, 3, 3, 2, 1, 1, 1, 2, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 3, 1, 2, 2, 2, 3, 3, 3, 3, 3, 3, 2, 2, 2, 2, 3, 2, 3, 3, 3, 3, 3, 2, 3, 3, 3, 3],
+        gapOverrides: [{
+            first: '/',
+            second: '/',
+            gap: 0
+        }],
+        ligatures: []
+    },
+    'tiny-3': {
+        file: 'font/tiny3.png',
+        height: 5,
+        line: 1,
+        space: 1,
+        gap: 1,
+        underline: 4,
+        widths: [3, 3, 3, 2, 3, 3, 3, 3, 3, 1, 2, 3, 2, 5, 3, 3, 3, 3, 3, 3, 3, 3, 3, 5, 3, 3, 3, 3, 3, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 5, 3, 3, 3, 4, 3, 2, 3, 3, 3, 5, 3, 3, 3, 1, 1, 1, 2, 1, 1, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2, 2, 1, 3, 1, 2, 2, 3, 4, 3, 3, 3, 2, 2, 2, 2, 2, 2, 3, 2, 3, 3, 5, 3, 3, 3, 3, 3, 3, 5],
+        gapOverrides: [{
+            first: '/',
+            second: '/',
+            gap: 0
+        }],
+        ligatures: []
+    },
+    'tiny': {
+        file: 'font/tiny4.png',
+        height: 5,
+        line: 1,
+        space: 1,
+        gap: 1,
+        underline: 4,
+        widths: [3, 3, 3, 2, 3, 3, 3, 3, 3, 1, 2, 3, 2, 5, 3, 3, 3, 3, 3, 2, 3, 3, 3, 5, 3, 3, 3, 3, 3, 2, 3, 3, 3, 3, 3, 3, 2, 3, 3, 5, 4, 3, 3, 4, 3, 2, 3, 3, 3, 5, 3, 3, 2, 1, 1, 1, 2, 1, 1, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2, 2, 1, 3, 1, 2, 2, 3, 4, 3, 3, 3, 3, 3, 2, 2, 2, 2, 3, 2, 3, 3, 5, 3, 3, 2, 7, 7, 3, 3],
+        gapOverrides: [{
+            first: '/',
+            second: '/',
+            gap: 0
+        }],
+        ligatures: []
+    }
+}
 
 type ParsedFont = {
     image: Promise<ImageBitmap>
@@ -231,7 +228,7 @@ type CharTable = {
 const parsedFonts: Record<number, ParsedFont> = {}
 const parsedMonoFonts: Record<number, ParsedFont> = {}
 
-const specialParsedFonts: Record<string, ParsedFont> = {}
+const parsedSpecialFonts: Record<string, ParsedFont> = {}
 
 function loadImage(font: Font | MonoFont, mono: boolean, expectedWidth: number): Promise<ImageBitmap> {
     return new Promise((resolve, reject) => {
@@ -248,6 +245,15 @@ function loadImage(font: Font | MonoFont, mono: boolean, expectedWidth: number):
         }
         img.onerror = _ => reject(new Error('Could not load font! (unable to load \'' + font.file + '\')'))
     });
+}
+
+function get_special_font(name: string) {
+    let parsed = parsedSpecialFonts[name]
+    if (parsed === undefined) {
+        parsed = parse_font(specialFonts[name]);
+        parsedSpecialFonts[name] = parsed
+    }
+    return parsed
 }
 
 function parse_font(font: Font): ParsedFont {
@@ -324,10 +330,6 @@ for (const monoFont of monoFonts) {
         charTable,
         gapOverrides: {}
     }
-}
-
-for (const specialFont of specialFonts) {
-    specialParsedFonts[specialFont.name] = parse_font(specialFont)
 }
 
 export const FONT_BIG = 12;
@@ -426,7 +428,9 @@ export default async function text(text: Text, height: number | string = FONT_NO
         text = [text]
     }
 
-    const font = typeof height === 'string' ? specialParsedFonts[height] : mono ? parsedMonoFonts[height] : parsedFonts[height]
+    const font = typeof height === 'string' ?
+        get_special_font(height) :
+        mono ? parsedMonoFonts[height] : parsedFonts[height]
     height = font.height
 
     const image = await font.image
