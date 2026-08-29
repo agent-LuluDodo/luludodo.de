@@ -1,0 +1,1 @@
+Colors were inspired by the Oceanic Theme of the [Material Theme UI](https://material-theme.com/) plugin for IntelliJ IDEA

@@ -1,7 +1,7 @@
 import {getStyle} from './style.ts';
 import icon from './icon.ts';
 
-type Deco = 'title' | 'fancy' | 'mod' | 'quick' | 'chains' | 'chains_entry' | 'building' | 'building_entry' | 'building_end' | 'header'
+type Deco = 'title' | 'fancy' | 'mod' | 'quick' | 'chains' | 'chains_entry' | 'building' | 'building_entry' | 'building_end' | 'header' | 'sub_title' | 'subtle' | 'disclaimer'
 
 export type DecoInfo = {
     prefix?: string
@@ -82,10 +82,28 @@ const decos: Record<Deco, DecoInfo> = {
         left: '1',
         right: '1.flip-h',
         bottom: '2'
+    },
+    sub_title: {
+        left: '1',
+        right: '1.flip-h'
+    },
+    subtle: {
+        html: 'corner-8',
+        left: '1',
+        right: '1.flip-h',
+        top: '2',
+        bottom: '2.flip-v'
+    },
+    disclaimer: {
+        html: 'corner-8',
+        top: '1',
+        left: '2',
+        right: '2.flip-h',
+        bottom: '3'
     }
 }
 
-export default function deco(html: HTMLElement, decoration: Deco | DecoInfo, alt = false) {
+export default function deco(html: HTMLElement, decoration: Deco | DecoInfo, alt: boolean = false, color?: string) {
     const info = typeof decoration === 'string' ? decos[decoration] : decoration;
     let wrapper;
     if (info.relink && html instanceof HTMLAnchorElement) {
@@ -109,10 +127,10 @@ export default function deco(html: HTMLElement, decoration: Deco | DecoInfo, alt
     grid.classList.add('grid')
 
     const prefix = typeof decoration === 'string' ? decoration : undefined
-    add(grid, prefix, info, 'left'  , alt)
-    add(grid, prefix, info, 'right' , alt)
-    add(grid, prefix, info, 'top'   , alt)
-    add(grid, prefix, info, 'bottom', alt)
+    add(grid, prefix, info, 'left'  , alt, color)
+    add(grid, prefix, info, 'right' , alt, color)
+    add(grid, prefix, info, 'top'   , alt, color)
+    add(grid, prefix, info, 'bottom', alt, color)
 
     if (info.html !== undefined)
         html.classList.add(...info.html.split('.'))
@@ -128,7 +146,7 @@ export default function deco(html: HTMLElement, decoration: Deco | DecoInfo, alt
     return wrapper
 }
 
-function add(grid: HTMLElement, prefix: string | undefined, info: DecoInfo, direction: 'left' | 'right' | 'top' | 'bottom', alt: boolean) {
+function add(grid: HTMLElement, prefix: string | undefined, info: DecoInfo, direction: 'left' | 'right' | 'top' | 'bottom', alt: boolean, color?: string) {
     const image = info[direction]
     if (image === undefined) return;
 
@@ -146,7 +164,7 @@ function add(grid: HTMLElement, prefix: string | undefined, info: DecoInfo, dire
     } else {
         src = `/deco/${info.prefix}/${imgName}.png`
     }
-    grid.appendChild(icon(src, alt ? getStyle().altBackground : getStyle().background, 0, 0, undefined, ['deco-img', direction, ...classes], undefined, canvas => {
+    grid.appendChild(icon(src, color ?? (alt ? getStyle().altBackground : getStyle().background), 0, 0, undefined, ['deco-img', direction, ...classes], undefined, canvas => {
         switch (direction) {
             case 'left':
                 grid.style.marginLeft = '-' + canvas.width + 'px'

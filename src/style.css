@@ -673,13 +673,190 @@ a {
     padding: 0 0 90px;
 }
 
-.java-bytecode-editor > #upload-prompt {
-    display: block;
-    margin: 0 auto;
-    width: min-content;
+.java-bytecode-viewer {
+    #upload-prompt {
+        display: block;
+        margin: 0 auto;
+        width: min-content;
+        cursor: default;
+        
+        .html {
+            background-color: var(--background);
+        }
+        
+        .html:hover {
+            background-color: rgb(from var(--text) calc(255 - r) calc(255 - g) calc(255 - b));
+        }
+    }
+    
+    #upload-prompt[hidden] {
+        display: none;
+    }
+    
+    #file-content {
+        position: relative;
+        padding-bottom: 90px;
+        
+        #parsing {
+            position: relative;
+            display: block;
+            margin: -3px auto;
+            width: min-content;
+            background-color: var(--background);
+            padding: 12px 9px 3px 12px;
+        }
+        
+        .sub-title {
+            width: min-content;
+            margin: auto;
+            
+            .html {
+                padding: 15px 9px 0 12px;
+            }
+        }
+        
+        > * {
+            margin: 60px auto 0;
+        }
+        
+        table {
+            position: relative;
+            display: block;
+            min-width: 50dvw;
+            width: fit-content;
+            max-width: calc(100dvw - 30px);
+            background-color: var(--background);
+            padding: 9px 15px 15px 15px;
+            border-spacing: 0;
+            
+            tr:last-child > td {
+                padding-bottom: 3px;
+            }
+        }
+        
+        > :first-child {
+            margin-top: 90px;
+        }
+        
+        .fields, .methods {
+            td {
+                padding: 3px 9px 6px 9px;
+            }
+        }
+        
+        .class {
+            .preview {
+                padding: 9px 9px 18px;
+            }
+            
+            .preview::after {
+                content: ' ';
+                display: block;
+                position: relative;
+                bottom: -9px;
+                left: -9px;
+                width: calc(100% + 18px);
+                height: 3px;
+                background-color: var(--alt-text);
+                z-index: 1;
+            }
+        }
+        
+        .metadata, .class {
+            tr {
+                td:first-child {
+                    vertical-align: top;
+                }
+                
+                td {
+                    padding: 9px;
+                }
+                
+                .access-flags {
+                    canvas:last-child {
+                        padding-left: 9px;
+                    }
+                }
+                
+                td {
+                    font-size: 0;
+                }
+                
+                canvas {
+                    display: inline-block;
+                }
+                
+                canvas:not(:last-child) {
+                    padding-right: 9px;
+                }
+                
+                div:not(:last-child) {
+                    padding-bottom: 3px;
+                }
+            }
+        }
+        
+        .fields {
+            .empty {
+                padding: 9px;
+            }
+        }
+        
+        .constants {
+            .constant {
+                .index {
+                    canvas {
+                        margin-left: auto;
+                        padding-right: 9px;
+                    }
+                }
+                
+                .preview {
+                    padding: 6px 3px 3px;
+                }
+            }
+            
+            .constant.internal {
+                display: none;
+            }
+        }
+        
+        table::after {
+            content: "";
+            display: block;
+            position: absolute;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            width: 30px;
+            background: linear-gradient(to right, transparent 0px, var(--background) 15px);
+        }
+        
+        .constants.show-internal {
+            .constant.internal {
+                display: table-row;
+            }
+        }
+    }
+    
+    .credits {
+        position: relative;
+        padding-bottom: 90px;
+        
+        .markdown {
+            position: relative;
+            margin: 0 auto 0;
+            padding: 24px 21px 18px 24px;
+            background-color: var(--background);
+        }
+    }
+}
+
+.disclaimer {
+    margin: -60px auto 60px;
     
     .html {
-        background-color: var(--background);
+        padding: 18px 15px 12px 18px;
     }
 }
 

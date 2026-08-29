@@ -3,6 +3,8 @@ import setStyle, {type Style} from '../util/style.ts';
 import header from '../util/header.ts';
 import footer from '../util/footer.ts';
 import icon from '../util/icon.ts';
+import deco from '../util/deco.ts';
+import text from '../util/font.ts';
 
 const style: Style = {
     background: '#FF8C42',
@@ -21,6 +23,15 @@ async function load(app: HTMLElement) {
     content.appendChild(icon('wip.png', '#FF8C42'))
     app.appendChild(content)
     app.appendChild(await footer())
+}
+
+export async function wip_disclaimer() {
+    const content = await text({
+        content: 'This page is still under development!\nYou can already use it, but expect some bugs',
+        color: style.text
+    })
+    content.style.backgroundColor = style.background
+    return deco(content, 'disclaimer', false, style.background)
 }
 
 export default load

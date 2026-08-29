@@ -9,7 +9,8 @@ export const paths: Record<string, string> = {
     'lorem-ipsum': 'lorem_ipsum',
     'privacy-policy': 'privacy_policy',
     'terms-of-use': 'terms_of_use',
-    'java-bytecode-viewer': 'wip',
+    'java-bytecode-viewer': 'java_bytecode_viewer',
+
     'test-font': 'test_font',
     'test-code': 'test_code',
     'test-markdown': 'test_markdown',
@@ -95,7 +96,7 @@ export async function load(path: string, subpath: string) {
     progress(0)
 
     const oldApp = document.getElementById('app')!
-    const app = document.createElement('div')
+    let app = document.createElement('div')
 
     if (index < curIndex) return;
     progress(0.1)
@@ -105,7 +106,24 @@ export async function load(path: string, subpath: string) {
     if (index < curIndex) return;
     progress(0.5)
 
-    await module.default(app, subpath)
+    try {
+        await module.default(app, subpath)
+    } catch (e) {
+        if (index < curIndex) return;
+        progress(0)
+
+        console.error(e)
+        app = document.createElement('div')
+
+        if (index < curIndex) return;
+        progress(0.1)
+        const errorPage = await import('../error/unknown.ts')
+
+        if (index < curIndex) return;
+        progress(0.5)
+
+        await errorPage.default(app)
+    }
 
     if (index < curIndex) return;
     progress(0.8)
