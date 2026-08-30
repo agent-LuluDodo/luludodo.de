@@ -1,7 +1,7 @@
 import {getStyle} from './style.ts';
 import icon from './icon.ts';
 
-type Deco = 'title' | 'fancy' | 'mod' | 'quick' | 'chains' | 'chains_entry' | 'building' | 'building_entry' | 'building_end' | 'header' | 'sub_title' | 'subtle' | 'disclaimer'
+type Deco = 'title' | 'fancy' | 'mod' | 'quick' | 'chains' | 'chains_entry' | 'building' | 'building_entry' | 'building_end' | 'header' | 'sub_title' | 'subtle' | 'disclaimer' | 'error'
 
 export type DecoInfo = {
     prefix?: string
@@ -100,6 +100,13 @@ const decos: Record<Deco, DecoInfo> = {
         left: '2',
         right: '2.flip-h',
         bottom: '3'
+    },
+    error: {
+        html: 'corner-8',
+        top: '1.flip-v',
+        bottom: '1',
+        left: '2',
+        right: '2.flip-h',
     }
 }
 

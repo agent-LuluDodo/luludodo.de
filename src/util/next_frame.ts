@@ -7,3 +7,11 @@ export default async function next_frame(): Promise<void> {
         })
     })
 }
+
+export async function pre_frame(): Promise<void> {
+    return new Promise((resolve, _) => {
+        requestAnimationFrame(() => {
+            resolve()
+        })
+    })
+}

@@ -1,6 +1,8 @@
 import {applyStyle} from './style.ts';
 import {pauseTitleUpdates, resetTitle, resumeTitleUpdates} from './title.ts';
 import progress from './progress.ts';
+import {pauseDropUpdates, resetDrop, resumeDropUpdates} from './drop.ts';
+import {pauseHotkeyUpdates, resetHotkeys, resumeHotkeyUpdates} from './hotkey.ts';
 
 export const paths: Record<string, string> = {
     '': 'home',
@@ -88,7 +90,11 @@ let curIndex = 0;
 
 export async function load(path: string, subpath: string) {
     pauseTitleUpdates()
+    pauseDropUpdates()
+    pauseHotkeyUpdates()
     resetTitle()
+    resetDrop()
+    resetHotkeys()
 
     const index = ++curIndex;
 
@@ -143,6 +149,8 @@ export async function load(path: string, subpath: string) {
     if (index < curIndex) return;
     progress(1.0)
 
+    resumeHotkeyUpdates()
+    resumeDropUpdates()
     resumeTitleUpdates()
 }
 

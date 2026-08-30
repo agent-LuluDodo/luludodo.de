@@ -803,26 +803,94 @@ a {
         }
         
         .constants {
+            padding-left: 0;
+            padding-right: 0;
+            
+            .constant:has(td):hover {
+                position: relative;
+                background-color: #1b2529;
+                z-index: 1;
+            }
+            
+            .constant:has(td):hover::after {
+                content: "";
+                display: block;
+                position: absolute;
+                left: 0;
+                top: 0;
+                bottom: 0;
+                width: 100%;
+                max-width: calc(100dvw - 30px);
+                background: linear-gradient(to right, transparent calc(100% - 30px), #1b2529 calc(100% - 15px));
+                z-index: 1;
+            }
+            
             .constant {
-                .index {
-                    canvas {
-                        margin-left: auto;
-                        padding-right: 9px;
-                    }
+                .index canvas {
+                    margin-left: auto;
+                    padding-left: 15px;
+                    padding-right: 9px;
+                }
+                
+                td.index {
+                    padding-top: 10px;
+                    vertical-align: top;
                 }
                 
                 .preview {
                     padding: 6px 3px 3px;
                 }
+                
+                .data {
+                    font-size: 0;
+                    padding: 0;
+                    border-spacing: 12px 3px;
+                    background-color: transparent;
+                    
+                    canvas {
+                        display: inline-block;
+                    }
+                    
+                    td:first-child {
+                        vertical-align: top;
+                    }
+                    
+                    td:last-child > div > canvas:first-child {
+                        padding-right: 9px;
+                    }
+                }
+            }
+            
+            .constant:has(.data:not(:empty)) {
+                cursor: pointer;
+            }
+            
+            .constant.collapsed > * > .data {
+                display: none;
             }
             
             .constant.internal {
                 display: none;
             }
+            
+            .show-internal-button {
+                transition: filter 250ms ease;
+                display: block;
+                position: relative;
+                width: fit-content;
+                margin: -18px 0 -43px auto;
+                padding: 18px 15px 12px 18px;
+                z-index: 2;
+            }
+            
+            .show-internal-button:hover {
+                filter: brightness(150%);
+            }
         }
         
-        table::after {
+        > * > * > table::after {
             content: "";
+            pointer-events: none;
             display: block;
             position: absolute;
             right: 0;
@@ -835,6 +903,17 @@ a {
         .constants.show-internal {
             .constant.internal {
                 display: table-row;
+            }
+        }
+        
+        .error:not(.deco) {
+            margin: auto;
+            padding-top: 90px;
+            width: fit-content;
+            
+            .html {
+                padding: 18px 15px 12px 18px;
+                background-color: #9e2927;
             }
         }
     }
@@ -850,6 +929,46 @@ a {
             background-color: var(--background);
         }
     }
+}
+
+.potential-drop::after, .drop-success::after, .drop-failure::after {
+    content: '';
+    position: fixed;
+    z-index: 10000;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+}
+
+.potential-drop::after {
+    background-color: #0007;
+}
+
+@keyframes drop-success {
+    from {
+        background: #0F73;
+    }
+    to {
+        background: #0F70;
+    }
+}
+
+.drop-success::after {
+    animation: drop-success .5s;
+}
+
+@keyframes drop-failure {
+    from {
+        background: #F433;
+    }
+    to {
+        background: #F430;
+    }
+}
+
+.drop-failure::after {
+    animation: drop-failure .5s;
 }
 
 .disclaimer {

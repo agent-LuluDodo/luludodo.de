@@ -10,6 +10,8 @@ import {display, read} from '../file/java_bytecode.ts';
 import next_frame from '../util/next_frame.ts';
 import {wip_disclaimer} from './wip.ts';
 import markdown from '../util/markdown.ts';
+import {onDrop} from '../util/drop.ts';
+import hotkey from '../util/hotkey.ts';
 
 const style: Style = {
     text: '#eeffff',
@@ -28,13 +30,15 @@ async function load(app: HTMLElement) {
     const content = document.createElement('div')
     content.classList.add('java-bytecode-viewer')
 
-    content.appendChild(deco(await text('Java Bytecode Viewer'), 'title'))
+    content.appendChild(deco(await text('Java Bytecode Viewer', FONT_BIG), 'title'))
 
     content.appendChild(await wip_disclaimer())
 
     const upload_prompt = deco(await textButton('Upload File', () => showDialog(openFile)), 'quick')
     upload_prompt.id = 'upload-prompt'
     content.appendChild(upload_prompt)
+
+    onDrop(openFile)
 
     const file_content = document.createElement('div')
     file_content.id = 'file-content'
@@ -56,6 +60,7 @@ async function load(app: HTMLElement) {
 async function openFile(file: File) {
     const upload_prompt = document.getElementById('upload-prompt')!
 
+    hotkey('F8')
     const file_content = document.getElementById('file-content')!
     for (let i = file_content.childNodes.length - 1; i >= 0; i--) {
         file_content.removeChild(file_content.childNodes[i])
@@ -70,15 +75,30 @@ async function openFile(file: File) {
     upload_prompt.hidden = true
     file_content.appendChild(parsing)
 
-    let class_file = await read(file)
-    console.log(class_file)
+    let data
+    try {
+        let class_file = await read(file)
+        console.log(class_file)
 
-    parsing.removeChild(parsing.children[0])
-    parsing.appendChild(await text('Parsing...'))
-    await next_frame()
+        parsing.removeChild(parsing.children[0])
+        parsing.appendChild(await text('Parsing...'))
+        await next_frame()
 
-    let data = display(class_file)
-    console.log(data)
+        data = display(class_file)
+        console.log(data)
+    } catch (e) {
+        console.error(e)
+        parsing.remove()
+
+        const error = document.createElement('div')
+        error.classList.add('error')
+        error.appendChild(deco(await text('Invalid or corrupted file!'), 'error', false, '#9e2927'))
+        file_content.appendChild(error)
+
+        upload_prompt.hidden = false
+
+        return
+    }
 
     parsing.removeChild(parsing.children[0])
     parsing.appendChild(await text('Rendering...'))
@@ -140,6 +160,33 @@ async function openFile(file: File) {
     constantsTitle.appendChild(deco(await text('Constant Pool', FONT_BIG), 'sub_title', false, style.text))
     constants.appendChild(constantsTitle)
 
+    const showInternalButton = document.createElement('a')
+    showInternalButton.classList.add('show-internal-button')
+    showInternalButton.appendChild(await text({
+        content: '[F8] Show Internal',
+        color: style.link,
+        underline: style.link
+    }))
+    showInternalButton.onclick = async () => {
+        showInternalButton.children[0].remove()
+        if (constants.classList.toggle('show-internal')) {
+            showInternalButton.appendChild(await text({
+                content: '[F8] Hide Internal',
+                color: style.link,
+                underline: style.link
+            }))
+        } else {
+            showInternalButton.appendChild(await text({
+                content: '[F8] Show Internal',
+                color: style.link,
+                underline: style.link
+            }))
+        }
+    }
+    constants.appendChild(showInternalButton)
+
+    hotkey('F8', () => showInternalButton.click())
+
     const constantsHeader = document.createElement('tr')
     constantsHeader.classList.add('constant')
     const constantsIndex = document.createElement('th')
@@ -154,6 +201,13 @@ async function openFile(file: File) {
     for (const constantData of data.constants) {
         const constant = document.createElement('tr')
         constant.classList.add('constant', 'collapsed')
+        constant.onclick = () => {
+            const scroll = document.scrollingElement?.scrollTop
+            constant.classList.toggle('collapsed')
+            if (scroll !== undefined) {
+                document.scrollingElement!.scrollTop = scroll
+            }
+        }
         if (constantData.internal) constant.classList.add('internal')
         const index = document.createElement('td')
         index.classList.add('index')
@@ -162,10 +216,40 @@ async function openFile(file: File) {
             color: '#546e7a'
         }, FONT_SMALL, true))
         constant.appendChild(index)
-        const preview = document.createElement('td')
+        const content = document.createElement('td')
+        const preview = document.createElement('div')
         preview.classList.add('preview')
         preview.appendChild(await text(constantData.preview, FONT_NORMAL, true))
-        constant.appendChild(preview)
+        content.appendChild(preview)
+        const data = document.createElement('table')
+        data.classList.add('data')
+        for (const key in constantData.data) {
+            const row = document.createElement('tr')
+            const name = document.createElement('td')
+            name.appendChild(await text({
+                content: key,
+                color: '#546e7a'
+            }))
+            row.appendChild(name)
+            const [normal, small] = constantData.data[key]
+            const value = document.createElement('td')
+            let div: HTMLDivElement | null = null
+            for (const line of normal) {
+                div = document.createElement('div')
+                div.appendChild(await text(line, FONT_NORMAL, true))
+                value.appendChild(div)
+            }
+            if (div !== null && small !== undefined) {
+                div.appendChild(await text({
+                    content: small,
+                    color: '#546e7a'
+                }, FONT_SMALL, true))
+            }
+            row.appendChild(value)
+            data.appendChild(row)
+        }
+        content.appendChild(data)
+        constant.appendChild(content)
         constants.appendChild(constant)
     }
 

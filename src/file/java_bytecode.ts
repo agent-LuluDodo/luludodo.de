@@ -1,6 +1,22 @@
 import type {Text} from '../util/font.ts';
 import from_mutf8 from '../util/mutf8.ts';
 
+const colors = {
+    keyword: '#c792ea',
+    operator: '#89ddff',
+    number: '#f78c6c',
+    string: '#c3e88d',
+    _class: '#ffcb6b',
+    _interface: '#c3e88d',
+    method: '#82aaff',
+    field: '#eeffe3',
+    error: '#ff5370',
+    unused: '#939fa5',
+    note: '#546e7a',
+    highlight: '#8eb0c0',
+    todo: '#fce893'
+}
+
 type u1 = number;
 type u2 = number;
 type u4 = number;
@@ -46,7 +62,7 @@ type Constants = {
     index: number
     preview: Text
     internal: boolean
-    data: Record<string, Text>
+    data: Record<string, [Text[]] | [Text[], string]>
 }[]
 
 type ConstantPoolRef = {
@@ -59,8 +75,175 @@ type AccessFlags = {
     binary: Text
 }
 
-type Attributes = {
+type Attributes = Attribute[];
 
+type Attribute = UnknownAttribute |
+    ConstantValueAttribute |
+    CodeAttribute |
+    StackMapTableAttribute |
+    ExceptionsAttribute |
+    InnerClassesAttribute |
+    EnclosingMethodAttribute |
+    SyntheticAttribute |
+    SignatureAttribute |
+    SourceFileAttribute |
+    SourceDebugExtensionAttribute |
+    LineNumberTableAttribute |
+    LocalVariableTableAttribute |
+    LocalVariableTypeTableAttribute |
+    DeprecatedAttribute |
+    RuntimeVisibleAnnotationsAttribute |
+    RuntimeInvisibleAnnotationsAttribute |
+    RuntimeVisibleParameterAnnotationsAttribute |
+    RuntimeInvisibleParameterAnnotationsAttribute |
+    RuntimeVisibleTypeAnnotationsAttribute |
+    RuntimeInvisibleTypeAnnotationsAttribute |
+    AnnotationDefaultAttribute |
+    BootstrapMethodsAttribute |
+    MethodParametersAttribute |
+    ModuleAttribute |
+    ModulePackagesAttribute |
+    ModuleMainClassAttribute |
+    NestHostAttribute |
+    NestMembersAttribute |
+    RecordAttribute |
+    PermittedSubclassesAttribute
+
+type UnknownAttribute = {
+    name: string,
+    unknown: true,
+    bytes: number[]
+}
+
+type ConstantValueAttribute = {
+    name: 'ConstantValue',
+    value: ConstantPoolRef
+}
+
+type CodeAttribute = {
+    name: 'Code'
+    max_stack: Text
+    max_locals: Text
+    code: Text[]
+    exception_table: {
+        start_pc: Text
+        end_pc: Text
+        handler_pc: Text
+        catch_type: ConstantPoolRef
+    }
+    attributes: Attributes
+}
+
+type StackMapTableAttribute = {
+    name: 'StackMapTable'
+}
+
+type ExceptionsAttribute = {
+    name: 'Exceptions'
+}
+
+type InnerClassesAttribute = {
+    name: 'InnerClasses'
+}
+
+type EnclosingMethodAttribute = {
+    name: 'EnclosingMethod'
+}
+
+type SyntheticAttribute = {
+    name: 'Synthetic'
+}
+
+type SignatureAttribute = {
+    name: 'Signature'
+}
+
+type SourceFileAttribute = {
+    name: 'SourceFile'
+}
+
+type SourceDebugExtensionAttribute = {
+    name: 'SourceDebugExtension'
+}
+
+type LineNumberTableAttribute = {
+    name: 'LineNumberTable'
+}
+
+type LocalVariableTableAttribute = {
+    name: 'LocalVariableTable'
+}
+
+type LocalVariableTypeTableAttribute = {
+    name: 'LocalVariableTypeTable'
+}
+
+type DeprecatedAttribute = {
+    name: 'Deprecated'
+}
+
+type RuntimeVisibleAnnotationsAttribute = {
+    name: 'RuntimeVisibleAnnotations'
+}
+
+type RuntimeInvisibleAnnotationsAttribute = {
+    name: 'RuntimeInvisibleAnnotations'
+}
+
+type RuntimeVisibleParameterAnnotationsAttribute = {
+    name: 'RuntimeVisibleParameterAnnotations'
+}
+
+type RuntimeInvisibleParameterAnnotationsAttribute = {
+    name: 'RuntimeInvisibleParameterAnnotations'
+}
+
+type RuntimeVisibleTypeAnnotationsAttribute = {
+    name: 'RuntimeVisibleTypeAnnotations'
+}
+
+type RuntimeInvisibleTypeAnnotationsAttribute = {
+    name: 'RuntimeInvisibleTypeAnnotations'
+}
+
+type AnnotationDefaultAttribute = {
+    name: 'AnnotationDefault'
+}
+
+type BootstrapMethodsAttribute = {
+    name: 'BootstrapMethods'
+}
+
+type MethodParametersAttribute = {
+    name: 'MethodParameters'
+}
+
+type ModuleAttribute = {
+    name: 'Module'
+}
+
+type ModulePackagesAttribute = {
+    name: 'ModulePackages'
+}
+
+type ModuleMainClassAttribute = {
+    name: 'ModuleMainClass'
+}
+
+type NestHostAttribute = {
+    name: 'NestHost'
+}
+
+type NestMembersAttribute = {
+    name: 'NestMembers'
+}
+
+type RecordAttribute = {
+    name: 'Record'
+}
+
+type PermittedSubclassesAttribute = {
+    name: 'PermittedSubclasses'
 }
 
 type ClassFile = {
@@ -632,7 +815,7 @@ function preview_info(constant_pool: CPInfo[], access_flags: number, this_class:
     if (super_name !== (is_enum(access_flags) ? 'java.lang.Enum' : 'java.lang.Object')) {
         result.push({
             content: ' extends ',
-            color: '#c792ea'
+            color: colors.keyword
         })
         result.push(...pretty_class(super_name, true))
     }
@@ -652,13 +835,13 @@ function preview_info(constant_pool: CPInfo[], access_flags: number, this_class:
         if (first) {
             result.push({
                 content: is_interface(access_flags) ? ' extends ' : ' implements ',
-                color: '#c792ea'
+                color: colors.keyword
             })
             first = false
         } else {
             result.push({
                 content: ', ',
-                color: '#89ddff'
+                color: colors.operator
             })
         }
         result.push(...pretty_class(interface_name, true))
@@ -673,7 +856,7 @@ function display_methods(constant_pool: CPInfo[], this_index: number, methods: M
         result.push({
             preview: preview_method(constant_pool, this_index, method),
             access_flags: display_access_flags(method.access_flags, 'method'),
-            name: display_name(constant_pool, method.name_index, '#82aaff'),
+            name: display_name(constant_pool, method.name_index, colors.method),
             descriptor: display_descriptor(constant_pool, method.descriptor_index, true),
             attributes: []
         })
@@ -712,7 +895,7 @@ function display_fields(constant_pool: CPInfo[], fields: FieldInfo[]): Fields {
         result.push({
             preview: preview_field(constant_pool, field),
             access_flags: display_access_flags(field.access_flags, 'field'),
-            name: display_name(constant_pool, field.name_index, '#eeffe3'),
+            name: display_name(constant_pool, field.name_index, colors.field),
             descriptor: display_descriptor(constant_pool, field.descriptor_index),
             attributes: []
         })
@@ -731,7 +914,7 @@ function preview_field(constant_pool: CPInfo[], field: FieldInfo): Text {
             ...get_access_flags(field.access_flags, 'field', false),
             {
                 content: name,
-                color: '#eeffe3'
+                color: colors.field
             }
         ]
     }
@@ -746,7 +929,7 @@ function preview_field(constant_pool: CPInfo[], field: FieldInfo): Text {
         ...pretty_class(descriptor, true),
         {
             content: ' ' + name,
-            color: '#eeffe3'
+            color: colors.field
         }
     ]
 }
@@ -770,7 +953,7 @@ function preview_method(constant_pool: CPInfo[], this_index: number, method: Met
                 ...get_access_flags(method.access_flags, 'method', false),
                 {
                     content: '{}',
-                    color: '#89ddff'
+                    color: colors.operator
                 }
             ]
         } else if (name === '<init>' && returns === 'void') {
@@ -778,7 +961,7 @@ function preview_method(constant_pool: CPInfo[], this_index: number, method: Met
             if (typeof this_name === 'string') {
                 return [
                     ...get_access_flags(method.access_flags, 'method', false),
-                    ...pretty_class(this_name, true, '#82aaff'),
+                    ...pretty_class(this_name, true, colors.method),
                     ...pretty_args(args, true, vararg)
                 ]
             } else {
@@ -786,7 +969,7 @@ function preview_method(constant_pool: CPInfo[], this_index: number, method: Met
                     ...get_access_flags(method.access_flags, 'method', false),
                     {
                         content: '<init>',
-                        color: '#c792ea'
+                        color: colors.keyword
                     },
                     ...pretty_args(args, true, vararg)
                 ]
@@ -797,7 +980,7 @@ function preview_method(constant_pool: CPInfo[], this_index: number, method: Met
                 ...pretty_class(returns, true),
                 {
                     content: ' ' + name,
-                    color: '#82aaff'
+                    color: colors.method
                 },
                 ...pretty_args(args, true, vararg)
             ]
@@ -828,26 +1011,44 @@ type AccessFlagsType = 'class' | 'method' | 'field'
 function display_access_flags(access_flags: number, type: AccessFlagsType): AccessFlags {
     return {
         text: get_access_flags(access_flags, type, true, false),
-        binary: bytes_to_string(access_flags, 2),
+        binary: bytes_to_text(access_flags, 2),
     }
 }
 
-function bytes_to_string(value: number, bytes: number): Text {
+function bytes_to_text(value: number, bytes: number): Text {
     const result: { content: string, color: string }[] = []
     for (let i = 0; i < bytes * 8; i++) {
         if ((value >> i) & 0x1) {
             result.push({
                 content: '1',
-                color: '#8eb0c0'
+                color: colors.highlight
             })
         } else {
             result.push({
                 content: '0',
-                color: '#546e7a'
+                color: colors.note
             })
         }
     }
     return result.reverse()
+}
+
+function hex_to_string(...u32s: number[]): string {
+    let result = ''
+    for (const u32 of u32s) {
+        const str = '00000000' + u32.toString(16).toUpperCase()
+        result += str.substring(str.length - 8)
+    }
+    return result
+}
+
+function bytes_to_string(bytes: number[]): string {
+    let result = ''
+    for (const byte of bytes) {
+        const str = '00' + byte.toString(16).toUpperCase()
+        result += str.substring(str.length - 2)
+    }
+    return result
 }
 
 function is_vararg(access_flags: number): boolean {
@@ -1007,13 +1208,13 @@ function get_access_flags(access_flags: number, type: AccessFlagsType, trim: boo
             if (!preview) {
                 result.push({
                     content: flag.name + ' ',
-                    color: '#939fa5'
+                    color: colors.unused
                 })
             }
         } else {
             result.push({
                 content: flag.name + ' ',
-                color: '#c792ea'
+                color: colors.keyword
             })
         }
     }
@@ -1031,7 +1232,7 @@ function display_constants(constant_pool: CPInfo[]): Constants {
         index: 0,
         preview: {
             content: 'null',
-            color: '#546e7a'
+            color: colors.note
         },
         internal: true,
         data: {}
@@ -1053,14 +1254,287 @@ function constant_internal(constant: CPInfo): boolean {
     return constant.tag === 12 || constant.tag === 1
 }
 
-function constant_data(_constant_pool: CPInfo[], _constant: CPInfo): Record<string, Text> {
-    return {}
+function constant_data(constant_pool: CPInfo[], constant: CPInfo): Record<string, [Text[]] | [Text[], string]> {
+    switch (constant.tag) {
+        case 7:
+            return get_class_data(constant_pool, constant.name_index)
+        case 9:
+            return get_field_ref_data(constant_pool, constant.class_index, constant.name_and_type_index)
+        case 10:
+            return get_method_ref_data(constant_pool, constant.class_index, constant.name_and_type_index, false)
+        case 11:
+            return get_method_ref_data(constant_pool, constant.class_index, constant.name_and_type_index, true)
+        case 8:
+            return get_string_data(constant_pool, constant.string_index)
+        case 3:
+            return get_integer_data(constant.bytes)
+        case 4:
+            return get_float_data(constant.bytes)
+        case 5:
+            return get_long_data(constant.high_bytes, constant.low_bytes)
+        case 6:
+            return get_double_data(constant.high_bytes, constant.low_bytes)
+        case 12:
+            return get_name_and_type_data(constant_pool, constant.name_index, constant.descriptor_index)
+        case 1:
+            // text
+            return get_utf8_data(constant.bytes)
+        case 15:
+            return get_method_handle_data(constant_pool, constant.reference_kind, constant.reference_index)
+        case 16:
+            return get_method_type_data(constant_pool, constant.descriptor_index)
+        case 17:
+            return get_dynamic_data(constant_pool, constant.bootstrap_method_attr_index, constant.name_and_type_index)
+        case 18:
+            return get_invoke_dynamic_data(constant_pool, constant.bootstrap_method_attr_index, constant.name_and_type_index)
+        case 19: // module
+        case 20: // package
+            return {} // TODO
+        default:
+            return {}
+    }
+}
+
+function get_dynamic_data(constant_pool: CPInfo[], bootstrap_method_attr_index: number, name_and_type_index: number): Record<string, [Text[]] | [Text[], string]> {
+    return {
+        'Tag': [[{
+            content: 'Dynamic'
+        }], '17'],
+        'Bootstrap Method': [[{
+            content: '#' + bootstrap_method_attr_index.toString(),
+        }]],
+        'Name': [[get_name_and_type(constant_pool, name_and_type_index, (name, _) => { return {
+            content: name,
+            color: colors.field
+        }})], '#' + name_and_type_index],
+        'Type': [[get_name_and_type(constant_pool, name_and_type_index, (_, type) => {
+            const parsed = parse_descriptor(type)
+            if (typeof parsed === 'string') {
+                return pretty_class(parsed)
+            } else {
+                return parsed
+            }
+        })], '#' + name_and_type_index]
+    }
+}
+
+function get_invoke_dynamic_data(constant_pool: CPInfo[], bootstrap_method_attr_index: number, name_and_type_index: number): Record<string, [Text[]] | [Text[], string]> {
+    return {
+        'Tag': [[{
+            content: 'Invoke Dynamic'
+        }], '18'],
+        'Bootstrap Method': [[{
+            content: '#' + bootstrap_method_attr_index.toString(),
+        }]],
+        'Name': [[get_name_and_type(constant_pool, name_and_type_index, (name, _) => { return {
+            content: name,
+            color: colors.method
+        }})], '#' + name_and_type_index],
+        'Arguments': [get_method_arguments(constant_pool, name_and_type_index), '#' + name_and_type_index],
+        'Returns': [[get_name_and_type(constant_pool, name_and_type_index, (_, type) => {
+            return parse_method(type, (returns, _) => {
+                return pretty_class(returns)
+            })
+        })], '#' + name_and_type_index]
+    }
+}
+
+function get_method_type_data(constant_pool: CPInfo[], descriptor_index: number): Record<string, [Text[]] | [Text[], string]> {
+    return {
+        'Tag': [[{
+            content: 'Method Type'
+        }], '16'],
+        'Arguments': [get_method_arguments(constant_pool, descriptor_index, true), '#' + descriptor_index],
+        'Returns': [[get_name(constant_pool, descriptor_index, (type) => {
+            return parse_method(type, (returns, _) => {
+                return pretty_class(returns)
+            })
+        })], '#' + descriptor_index]
+    }
+}
+
+function get_method_handle_data(constant_pool: CPInfo[], reference_kind: number, reference_index: number): Record<string, [Text[]] | [Text[], string]> {
+    return {
+        'Tag': [[{
+            content: 'Method Handle'
+        }], '15'],
+        'Kind': [[get_method_handle_kind(reference_kind)], reference_kind.toString()],
+        'Target': [[constant_preview(constant_pool, constant_pool[reference_index - 1])], '#' + reference_index]
+    }
+}
+
+function get_utf8_data(bytes: number[]): Record<string, [Text[]] | [Text[], string]> {
+    return {
+        'Tag': [[{
+            content: 'UTF8'
+        }], '1'],
+        'Value': [[from_mutf8(bytes)], bytes_to_string(bytes)]
+    }
+}
+
+function get_name_and_type_data(constant_pool: CPInfo[], name_index: number, descriptor_index: number): Record<string, [Text[]] | [Text[], string]> {
+    return {
+        'Tag': [[{
+            content: 'Name & Type',
+        }], '12'],
+        'Name': [[get_name(constant_pool, name_index)], '#' + name_index],
+        'Type': [[get_name(constant_pool, descriptor_index)], '#' + descriptor_index]
+    }
+}
+
+function get_integer_data(bytes: number): Record<string, [Text[]] | [Text[], string]> {
+    return {
+        'Tag': [[{
+            content: 'Integer'
+        }], '3'],
+        'Value': [[preview_integer(bytes, '')], hex_to_string(bytes)]
+    }
+}
+
+function get_float_data(bytes: number): Record<string, [Text[]] | [Text[], string]> {
+    return {
+        'Tag': [[{
+            content: 'Float'
+        }], '4'],
+        'Value': [[preview_float(bytes, '')], hex_to_string(bytes)]
+    }
+}
+
+function get_long_data(high_bytes: number, low_bytes: number): Record<string, [Text[]] | [Text[], string]> {
+    return {
+        'Tag': [[{
+            content: 'Long'
+        }], '5'],
+        'Value': [[preview_long(high_bytes, low_bytes, '')], hex_to_string(high_bytes, low_bytes)]
+    }
+}
+
+function get_double_data(high_bytes: number, low_bytes: number): Record<string, [Text[]] | [Text[], string]> {
+    return {
+        'Tag': [[{
+            content: 'Double'
+        }], '6'],
+        'Value': [[preview_double(high_bytes, low_bytes, '')], hex_to_string(high_bytes, low_bytes)]
+    }
+}
+
+function get_string_data(constant_pool: CPInfo[], string_index: number): Record<string, [Text[]] | [Text[], string]> {
+    return {
+        'Tag': [[{
+            content: 'String'
+        }], '8'],
+        'Value': [[get_string(constant_pool, string_index, '')], '#' + string_index]
+    }
+}
+
+function get_field_ref_data(constant_pool: CPInfo[], class_index: number, name_and_type_index: number): Record<string, [Text[]] | [Text[], string]> {
+    return {
+        'Tag': [[{
+            content: 'Field Reference'
+        }], '9'],
+        'Class': [[get_class(constant_pool, class_index, name => {
+            const parsed = parse_class(name)
+            if (typeof parsed === 'string') {
+                return pretty_class(parsed)
+            } else {
+                return parsed
+            }
+        })], '#' + class_index],
+        'Name': [[get_name_and_type(constant_pool, name_and_type_index, (name, _) => { return {
+            content: name,
+            color: colors.field
+        }})], '#' + name_and_type_index],
+        'Type': [[get_name_and_type(constant_pool, name_and_type_index, (_, type) => {
+            const parsed = parse_descriptor(type)
+            if (typeof parsed === 'string') {
+                return pretty_class(parsed)
+            } else {
+                return parsed
+            }
+        })], '#' + name_and_type_index]
+    }
+}
+
+function get_method_ref_data(constant_pool: CPInfo[], class_index: number, name_and_type_index: number, is_interface: boolean): Record<string, [Text[]] | [Text[], string]> {
+    return {
+        'Tag': [[{
+            content: is_interface ? 'Interface Method Reference' : 'Method Reference'
+        }], is_interface ? '11' : '10'],
+        'Class': [[get_class(constant_pool, class_index, name => {
+            const parsed = parse_class(name)
+            if (typeof parsed === 'string') {
+                return pretty_class(parsed, false, is_interface ? colors._interface : undefined)
+            } else {
+                return parsed
+            }
+        })], '#' + class_index],
+        'Name': [[get_name_and_type(constant_pool, name_and_type_index, (name, _) => { return {
+            content: name,
+            color: colors.method
+        }})], '#' + name_and_type_index],
+        'Arguments': [get_method_arguments(constant_pool, name_and_type_index), '#' + name_and_type_index],
+        'Returns': [[get_name_and_type(constant_pool, name_and_type_index, (_, type) => {
+            return parse_method(type, (returns, _) => {
+                return pretty_class(returns)
+            })
+        })], '#' + name_and_type_index]
+    }
+}
+
+function get_method_arguments(constant_pool: CPInfo[], index: number, is_descriptor: boolean = false): Text[] {
+    let result: Text[] = []
+    function get_args(type: string) {
+        return parse_method(type, (_, args) => {
+            let index = 0
+            let length = args.length.toString().length
+            for (const arg of args) {
+                result.push([
+                    {
+                        content: (++index).toString().padStart(length, ' ') + ' ',
+                        color: colors.note
+                    },
+                    ...pretty_class(arg)
+                ])
+            }
+            if (args.length === 0) {
+                result.push({
+                    content: '-',
+                    color: colors.note
+                })
+            }
+            return ''
+        })
+    }
+    const error = is_descriptor ?
+        get_name(constant_pool, index, (type) => get_args(type)) :
+        get_name_and_type(constant_pool, index, (_, type) => get_args(type))
+    if (error === '') {
+        return result
+    } else {
+        return [error]
+    }
+}
+
+function get_class_data(constant_pool: CPInfo[], name_index: number): Record<string, [Text[]] | [Text[], string]> {
+    return {
+        'Tag': [[{
+            content: 'Class',
+        }], '7'],
+        'Value': [[get_name(constant_pool, name_index, name => {
+            const parsed = parse_class(name)
+            if (typeof parsed === 'string') {
+                return pretty_class(parsed)
+            } else {
+                return parsed
+            }
+        })], '#' + name_index]
+    }
 }
 
 function constant_preview(constant_pool: CPInfo[], constant: CPInfo): Text {
     switch (constant.tag) {
         case 7:
-            // `class` Class
+            // Class
             return get_class_preview(constant_pool, constant.name_index)
         case 9:
             // type Class.name
@@ -1094,13 +1568,13 @@ function constant_preview(constant_pool: CPInfo[], constant: CPInfo): Text {
             // text
             return preview_utf8(constant.bytes)
         case 15:
+            return preview_method_handle(constant_pool, constant.reference_kind, constant.reference_index)
         case 16:
+            return preview_method_type(constant_pool, constant.descriptor_index)
         case 17:
+            return preview_dynamic(constant_pool, constant.name_and_type_index)
         case 18:
-            return { // TODO
-                content: 'TODO',
-                color: '#fce893'
-            }
+            return preview_invoke_dynamic(constant_pool, constant.name_and_type_index)
         case 19:
             // `module` Module
             return get_name(constant_pool, constant.name_index)
@@ -1110,10 +1584,127 @@ function constant_preview(constant_pool: CPInfo[], constant: CPInfo): Text {
     }
 }
 
+function preview_dynamic(constant_pool: CPInfo[], name_and_type_index: number): Text {
+    return get_name_and_type(constant_pool, name_and_type_index, (name, type) => {
+        const type_name = parse_descriptor(type)
+        if (typeof type_name !== 'string')
+            return type_name
+
+        return [
+            {
+                content: 'dynamic ',
+                color: colors.note
+            },
+            ...pretty_class(type_name, true),
+            {
+                content: ' ' + name,
+                color: colors.field
+            }
+        ]
+    })
+}
+
+function preview_invoke_dynamic(constant_pool: CPInfo[], name_and_type_index: number): Text {
+    return get_name_and_type(constant_pool, name_and_type_index, (name, type) => {
+        return parse_method(type, (returns, args) => {
+            return [
+                {
+                    content: 'dynamic ',
+                    color: colors.note
+                },
+                ...pretty_class(returns, true),
+                {
+                    content: ' ' + name,
+                    color: colors.method
+                },
+                ...pretty_args(args, true)
+            ]
+        })
+    })
+}
+
+function preview_method_type(constant_pool: CPInfo[], descriptor_index: number): Text {
+    return get_name(constant_pool, descriptor_index, (type) => {
+        return parse_method(type, (returns, args) => {
+            return [
+                ...pretty_args(args, true),
+                {
+                    content: ' -> ',
+                    color: colors.operator
+                },
+                ...pretty_class(returns, true)
+            ]
+        })
+    })
+}
+
+function preview_method_handle(constant_pool: CPInfo[], reference_kind: number, reference_index: number) {
+    let kind = get_method_handle_kind(reference_kind)
+    if (typeof kind !== 'string') {
+        return kind
+    }
+
+    let reference = constant_pool[reference_index - 1]
+    if (reference !== undefined) {
+        let result: Text | null = null
+        if (reference.tag == 9) {
+            result = get_fieldref_preview(constant_pool, reference.class_index, reference.name_and_type_index)
+        } else if (reference.tag == 10) {
+            result = get_methodref_preview(constant_pool, reference.class_index, reference.name_and_type_index, false)
+        } else if (reference.tag == 11) {
+            result = get_methodref_preview(constant_pool, reference.class_index, reference.name_and_type_index, true)
+        }
+        if (Array.isArray(result)) {
+            return [
+                {
+                    content: kind + ' ',
+                    color: colors.note
+                },
+                ...result
+            ]
+        } else if (result !== null) {
+            return result
+        }
+    }
+
+    return {
+        content: 'Expected method/field reference (9-11), got ' + reference?.tag + " " + reference_index,
+        color: colors.error
+    }
+}
+
+function get_method_handle_kind(reference_kind: number, onsuccess: (kind: string) => Text = kind => kind): Text {
+    switch (reference_kind) {
+        case 1:
+            return onsuccess('getField')
+        case 2:
+            return onsuccess('getStatic')
+        case 3:
+            return onsuccess('putField')
+        case 4:
+            return onsuccess('putStatic')
+        case 5:
+            return onsuccess('invokeVirtual')
+        case 6:
+            return onsuccess('invokeStatic')
+        case 7:
+            return onsuccess('invokeSpecial')
+        case 8:
+            return onsuccess('newInvokeSpecial')
+        case 9:
+            return onsuccess('invokeInterface')
+        default:
+            return {
+                content: 'Invalid reference kind: ' + reference_kind,
+                color: colors.error
+            }
+    }
+}
+
 function preview_utf8(bytes: number[]): Text {
     return [{
         content: 'utf8 ',
-        color: '#546e7a'
+        color: colors.note
     }, {
         content: from_mutf8(bytes)
     }]
@@ -1124,14 +1715,14 @@ function preview_name_and_type(constant_pool: CPInfo[], name_index: number, desc
         return [
             {
                 content: 'name ',
-                color: '#546e7a'
+                color: colors.note
             },
             {
                 content: name
             },
             {
                 content: ' type ',
-                color: '#546e7a'
+                color: colors.note
             },
             {
                 content: type
@@ -1144,7 +1735,7 @@ function parse_method(descriptor: string, onsuccess: (returns: string, args: str
     if (!descriptor.startsWith('(')) {
         return {
             content: 'Invalid method descriptor: ' + descriptor,
-            color: '#9e2927',
+            color: colors.error,
         }
     }
 
@@ -1191,7 +1782,7 @@ function parse_method(descriptor: string, onsuccess: (returns: string, args: str
 function pretty_args(args: string[], simplify?: boolean, vararg: boolean = false): { content: string, color: string }[] {
     const argsText: { content: string, color: string }[] = [{
         content: '(',
-        color: '#89ddff'
+        color: colors.operator
     }]
     let first = true
     for (const arg of args) {
@@ -1200,7 +1791,7 @@ function pretty_args(args: string[], simplify?: boolean, vararg: boolean = false
         } else {
             argsText.push({
                 content: ', ',
-                color: '#89ddff'
+                color: colors.operator
             })
         }
         argsText.push(...pretty_class(arg, simplify))
@@ -1210,12 +1801,12 @@ function pretty_args(args: string[], simplify?: boolean, vararg: boolean = false
     }
     argsText.push({
         content: ')',
-        color: '#89ddff'
+        color: colors.operator
     })
     return argsText
 }
 
-function pretty_class(class_name: string, simplify: boolean = false, color: string = '#ffcb6b'): { content: string, color: string }[] {
+function pretty_class(class_name: string, simplify: boolean = false, color: string = colors._class): { content: string, color: string }[] {
     const result: { content: string, color: string }[] = []
 
     let array = 0
@@ -1236,7 +1827,7 @@ function pretty_class(class_name: string, simplify: boolean = false, color: stri
         case 'char':
             result.push({
                 content: class_name,
-                color: '#c792ea'
+                color: colors.keyword
             })
             break
         default:
@@ -1253,7 +1844,7 @@ function pretty_class(class_name: string, simplify: boolean = false, color: stri
                     } else {
                         result.push({
                             content: '.',
-                            color: '#89ddff'
+                            color: colors.operator
                         })
                     }
                     result.push({
@@ -1269,38 +1860,38 @@ function pretty_class(class_name: string, simplify: boolean = false, color: stri
         array--
         result.push({
             content: '[]',
-            color: '#89ddff'
+            color: colors.operator
         })
     }
 
     return result
 }
 
-function preview_integer(bytes: number): Text {
+function preview_integer(bytes: number, suffix: string = 'i'): Text {
     return {
-        content: parse_integer(bytes).toString() + 'i',
-        color: '#f78c6c'
+        content: parse_integer(bytes).toString() + suffix,
+        color: colors.number
     }
 }
 
-function preview_float(bytes: number): Text {
+function preview_float(bytes: number, suffix: string = 'f'): Text {
     return {
-        content: float_to_string(parse_float(bytes), false) + 'f',
-        color: '#f78c6c'
+        content: float_to_string(parse_float(bytes), false) + suffix,
+        color: colors.number
     }
 }
 
-function preview_long(high_bytes: number, low_bytes: number): Text {
+function preview_long(high_bytes: number, low_bytes: number, suffix: string = 'L'): Text {
     return {
-        content: parse_long(high_bytes, low_bytes).toString() + 'L',
-        color: '#f78c6c'
+        content: parse_long(high_bytes, low_bytes).toString() + suffix,
+        color: colors.number
     }
 }
 
-function preview_double(high_bytes: number, low_bytes: number): Text {
+function preview_double(high_bytes: number, low_bytes: number, suffix: string = 'd'): Text {
     return {
-        content: float_to_string(parse_double(high_bytes, low_bytes), true) + 'd',
-        color: '#f78c6c'
+        content: float_to_string(parse_double(high_bytes, low_bytes), true) + suffix,
+        color: colors.number
     }
 }
 
@@ -1340,10 +1931,10 @@ function parse_double(high_bytes: number, low_bytes: number): number {
     return view.getFloat64(0)
 }
 
-function get_string(constant_pool: CPInfo[], string_index: number): Text {
+function get_string(constant_pool: CPInfo[], string_index: number, encase: string = '"'): Text {
     return get_name(constant_pool, string_index, value => { return {
-        content: '"' + value + '"',
-        color: '#c3e88d'
+        content: encase + value + encase,
+        color: colors.string
     }})
 }
 
@@ -1364,11 +1955,11 @@ function get_fieldref_preview(constant_pool: CPInfo[], class_index: number, name
                     ...pretty_class(class_name, true),
                     {
                         content: '.',
-                        color: '#89ddff'
+                        color: colors.operator
                     },
                     {
                         content: name,
-                        color: '#eeffe3'
+                        color: colors.field
                     }
                 ]
             } else {
@@ -1390,25 +1981,25 @@ function get_methodref_preview(constant_pool: CPInfo[], class_index: number, nam
                     return [
                         {
                             content: 'new ',
-                            color: '#c792ea'
+                            color: colors.keyword
                         },
-                        ...pretty_class(class_name, true, '#82aaff'),
+                        ...pretty_class(class_name, true, colors.method),
                         ...pretty_args(args, true)
                     ]
                 } else {
                     return [
-                        ...pretty_class(returns),
+                        ...pretty_class(returns, true),
                         {
                             content: ' ',
                         },
-                        ...pretty_class(class_name, true, is_interface ? '#c3e88d' : undefined),
+                        ...pretty_class(class_name, true, is_interface ? colors._interface : undefined),
                         {
                             content: '.',
-                            color: '#89ddff'
+                            color: colors.operator
                         },
                         {
                             content: name,
-                            color: '#82aaff'
+                            color: colors.method
                         },
                         ...pretty_args(args, true)
                     ]
@@ -1420,12 +2011,12 @@ function get_methodref_preview(constant_pool: CPInfo[], class_index: number, nam
 
 function get_name_and_type(constant_pool: CPInfo[], index: number, onsucccess: (name: string, type: string) => Text): Text {
     const value = constant_pool[index - 1]
-    if (value.tag === 12) {
+    if (value !== undefined && value.tag === 12) {
         return get_constant_name_and_type(constant_pool, value.name_index, value.descriptor_index, onsucccess)
     } else {
         return {
-            content: 'Expected NameAndType for ' + index,
-            color: '#9e2927',
+            content: 'Expected NameAndType (12), got ' + value?.tag,
+            color: colors.error,
         }
     }
 }
@@ -1443,12 +2034,12 @@ function get_constant_name_and_type(constant_pool: CPInfo[], name_index: number,
 
 function get_class(constant_pool: CPInfo[], index: number, onsuccess: (name: string) => Text = name => name): Text {
     const value = constant_pool[index - 1]
-    if (value.tag === 7) {
+    if (value !== undefined && value.tag === 7) {
         return get_name(constant_pool, value.name_index, onsuccess)
     } else {
         return {
-            content: 'Expected Class for ' + index,
-            color: '#9e2927',
+            content: 'Expected Class (7), got ' + value?.tag,
+            color: colors.error,
         }
     }
 }
@@ -1466,7 +2057,7 @@ function parse_descriptor(descriptor: string): Text {
     } else if (descriptor.length != 1) {
         return {
             content: 'Invalid descriptor: ' + descriptor,
-            color: '#9e2927',
+            color: colors.error,
         }
     } else {
         switch (descriptor.charAt(0)) {
@@ -1497,7 +2088,7 @@ function parse_descriptor(descriptor: string): Text {
             default:
                 return {
                     content: 'Invalid descriptor: ' + descriptor,
-                    color: '#9e2927',
+                    color: colors.error,
                 }
         }
     }
@@ -1560,12 +2151,12 @@ function get_class_preview(constant_pool: CPInfo[], name_index: number): Text {
 
 function get_name(constant_pool: CPInfo[], index: number, onsuccess: (value: string) => Text = (value) => value): Text {
     const value = constant_pool[index - 1]
-    if (value.tag === 1) {
+    if (value !== undefined && value.tag === 1) {
         return onsuccess(from_mutf8(value.bytes))
     } else {
         return {
-            content: 'Expected UTF-8 for ' + index,
-            color: '#9e2927',
+            content: 'Expected UTF-8 (1), got ' + value?.tag,
+            color: colors.error,
         }
     }
 }
@@ -1592,25 +2183,17 @@ function display_class_file(minor: number, major: number): Text {
     const result: { content: string, color: string }[] = []
     result.push({
         content: major.toString(),
-        color: '#f78c6c'
+        color: colors.number
     })
     if (minor === 0xFFFF) {
         result.push({
-            content: '.',
-            color: '#546e7a'
-        })
-        result.push({
-            content: 'preview',
-            color: '#c792ea'
+            content: '.preview',
+            color: colors.number
         })
     } else if (major >= 45 && major <= 55) {
         result.push({
-            content: '.',
-            color: '#546e7a'
-        })
-        result.push({
-            content: minor.toString(),
-            color: '#f78c6c'
+            content: '.' + minor.toString(),
+            color: colors.number
         })
     }
     return result
@@ -1707,13 +2290,13 @@ function display_java(minor: number, major: number): Text {
     }
     return {
         content: java,
-        color: '#c3e88d'
+        color: colors.string
     }
 }
 
 function display_magic(magic: u4): Text {
     return {
         content: magic.toString(16).toUpperCase(),
-        color: magic === 0xCAFEBABE ? '#c792ea' : '#9e2927',
+        color: magic === 0xCAFEBABE ? colors.keyword : colors.error,
     }
 }
