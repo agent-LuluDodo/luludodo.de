@@ -37,9 +37,7 @@ type Display = {
     },
     fields: Fields
     methods: Methods
-    /*
-    attributes: Attributes,
-     */
+    attributes: ClassFileAttributes
 }
 
 type Methods = {
@@ -47,7 +45,7 @@ type Methods = {
     access_flags: AccessFlags
     name: ConstantPoolRef
     descriptor: ConstantPoolRef
-    attributes: Attributes
+    attributes: MethodAttributes
 }[]
 
 type Fields = {
@@ -55,15 +53,17 @@ type Fields = {
     access_flags: AccessFlags
     name: ConstantPoolRef
     descriptor: ConstantPoolRef
-    attributes: Attributes
+    attributes: FieldAttributes
 }[]
 
 type Constants = {
     index: number
     preview: Text
     internal: boolean
-    data: Record<string, [Text[]] | [Text[], string]>
+    data: Data
 }[]
+
+type Data = Record<string, [Text[]] | [Text[], string]>
 
 type ConstantPoolRef = {
     value: Text
@@ -75,48 +75,69 @@ type AccessFlags = {
     binary: Text
 }
 
-type Attributes = Attribute[];
+type ClassFileAttributes = {
+    source_file?: SourceFileAttribute
+    inner_classes?: InnerClassesAttribute
+    enclosing_method?: EnclosingMethodAttribute
+    source_debug_extension?: SourceDebugExtensionAttribute
+    bootstrap_methods?: BootstrapMethodsAttribute
+    module?: ModuleAttribute
+    module_packages?: ModulePackagesAttribute
+    module_main_class?: ModuleMainClassAttribute
+    nest_host?: NestHostAttribute
+    nest_member?: NestMembersAttribute
+    record?: RecordAttribute
+    permitted_subclasses?: PermittedSubclassesAttribute
+    synthetic?: SyntheticAttribute
+    deprecated?: DeprecatedAttribute
+    signature?: SignatureAttribute
+    runtime_visible_annotations?: RuntimeVisibleAnnotationsAttribute
+    runtime_invisible_annotations?: RuntimeInvisibleAnnotationsAttribute
+    runtime_visible_type_annotations?: RuntimeVisibleTypeAnnotationsAttribute
+    runtime_invisible_type_annotations?: RuntimeInvisibleTypeAnnotationsAttribute
+    unknown: UnknownAttribute[]
+}
 
-type Attribute = UnknownAttribute |
-    ConstantValueAttribute |
-    CodeAttribute |
-    StackMapTableAttribute |
-    ExceptionsAttribute |
-    InnerClassesAttribute |
-    EnclosingMethodAttribute |
-    SyntheticAttribute |
-    SignatureAttribute |
-    SourceFileAttribute |
-    SourceDebugExtensionAttribute |
-    LineNumberTableAttribute |
-    LocalVariableTableAttribute |
-    LocalVariableTypeTableAttribute |
-    DeprecatedAttribute |
-    RuntimeVisibleAnnotationsAttribute |
-    RuntimeInvisibleAnnotationsAttribute |
-    RuntimeVisibleParameterAnnotationsAttribute |
-    RuntimeInvisibleParameterAnnotationsAttribute |
-    RuntimeVisibleTypeAnnotationsAttribute |
-    RuntimeInvisibleTypeAnnotationsAttribute |
-    AnnotationDefaultAttribute |
-    BootstrapMethodsAttribute |
-    MethodParametersAttribute |
-    ModuleAttribute |
-    ModulePackagesAttribute |
-    ModuleMainClassAttribute |
-    NestHostAttribute |
-    NestMembersAttribute |
-    RecordAttribute |
-    PermittedSubclassesAttribute
+type MethodAttributes = {
+    code?: CodeAttribute
+    exceptions?: ExceptionsAttribute
+    runtime_visible_parameter_annotations?: RuntimeVisibleParameterAnnotationsAttribute
+    runtime_invisible_parameter_annotations?: RuntimeInvisibleParameterAnnotationsAttribute
+    annotations_default?: AnnotationDefaultAttribute
+    method_parameters?: MethodParametersAttribute
+    synthetic?: SyntheticAttribute
+    deprecated?: DeprecatedAttribute
+    signature?: SignatureAttribute
+    runtime_visible_annotations?: RuntimeVisibleAnnotationsAttribute
+    runtime_invisible_annotations?: RuntimeInvisibleAnnotationsAttribute
+    runtime_visible_type_annotations?: RuntimeVisibleTypeAnnotationsAttribute
+    runtime_invisible_type_annotations?: RuntimeInvisibleTypeAnnotationsAttribute
+    unknown: UnknownAttribute[]
+}
+
+type FieldAttributes = {
+    constant_value?: ConstantValueAttribute
+    synthetic?: SyntheticAttribute
+    deprecated?: DeprecatedAttribute
+    signature?: SignatureAttribute
+    runtime_visible_annotations?: RuntimeVisibleAnnotationsAttribute
+    runtime_invisible_annotations?: RuntimeInvisibleAnnotationsAttribute
+    runtime_visible_type_annotations?: RuntimeVisibleTypeAnnotationsAttribute
+    runtime_invisible_type_annotations?: RuntimeInvisibleTypeAnnotationsAttribute
+    unknown: UnknownAttribute[]
+}
+
+type Attributes = {
+    unknown: UnknownAttribute[]
+}
 
 type UnknownAttribute = {
-    name: string,
-    unknown: true,
+    name: Text
     bytes: number[]
 }
 
 type ConstantValueAttribute = {
-    name: 'ConstantValue',
+    name: 'ConstantValue'
     value: ConstantPoolRef
 }
 
@@ -144,10 +165,26 @@ type ExceptionsAttribute = {
 
 type InnerClassesAttribute = {
     name: 'InnerClasses'
+    classes: InnerClass[]
+}
+
+type InnerClass = {
+    inner_class_info: ConstantPoolRef
+    outer_class_info: ConstantPoolRef
+    inner_name: ConstantPoolRef
+    inner_class_access_flags: AccessFlags
 }
 
 type EnclosingMethodAttribute = {
     name: 'EnclosingMethod'
+    preview: Text
+    class: ConstantPoolRef
+    method_name: ConstantPoolRef
+    args: {
+        value: Text[],
+        index: number
+    }
+    returns: ConstantPoolRef
 }
 
 type SyntheticAttribute = {
@@ -159,7 +196,8 @@ type SignatureAttribute = {
 }
 
 type SourceFileAttribute = {
-    name: 'SourceFile'
+    name: 'SourceFile',
+    source_file: ConstantPoolRef
 }
 
 type SourceDebugExtensionAttribute = {
@@ -789,11 +827,171 @@ export function display(class_file: ClassFile): Display {
             preview: preview_info(class_file.constant_pool, class_file.access_flags, class_file.this_class, class_file.super_class, class_file.interfaces),
             access_flags: display_access_flags(class_file.access_flags, 'class'),
             this_class: display_class(class_file.constant_pool, class_file.this_class),
-            super_class: display_class(class_file.constant_pool, class_file.super_class),
+            super_class: display_class(class_file.constant_pool, class_file.super_class, true),
             interfaces: display_interfaces(class_file.constant_pool, class_file.interfaces)
         },
         fields: display_fields(class_file.constant_pool, class_file.fields),
         methods: display_methods(class_file.constant_pool, class_file.this_class, class_file.methods),
+        attributes: display_class_file_attributes(class_file.constant_pool, class_file.attributes)
+    }
+}
+
+function display_unknown_attributes(constant_pool: CPInfo[], attributes: AttributeInfo[]): { unknown: UnknownAttribute[] } {
+    const result: { unknown: UnknownAttribute[] } = {
+        unknown: []
+    }
+    for (const attribute of attributes) {
+        result.unknown.push({
+            name: get_name(constant_pool, attribute.attribute_name_index),
+            bytes: attribute.info
+        })
+    }
+    return result
+}
+
+function display_class_file_attributes(constant_pool: CPInfo[], attributes: AttributeInfo[]): ClassFileAttributes {
+    const result: ClassFileAttributes = {
+        unknown: []
+    }
+    for (const attribute of attributes) {
+        const name = get_name(constant_pool, attribute.attribute_name_index)
+        if (typeof name === 'string') {
+            const view = new DataView(new Uint8Array(attribute.info).buffer)
+            switch (name) {
+                case 'SourceFile':
+                    result.source_file = display_source_file(constant_pool, view)
+                    break
+                case 'InnerClasses':
+                    result.inner_classes = display_inner_classes(constant_pool, view)
+                    break
+                case 'EnclosingMethod':
+                    result.enclosing_method = display_enclosing_method(constant_pool, view)
+                    break
+                default:
+                    result.unknown.push({
+                        name,
+                        bytes: attribute.info
+                    })
+                    break
+            }
+        } else {
+            result.unknown.push({
+                name,
+                bytes: attribute.info
+            })
+        }
+    }
+    return result
+}
+
+function display_enclosing_method(constant_pool: CPInfo[], view: DataView): EnclosingMethodAttribute {
+    const class_index = view.getUint16(0)
+    const method_index = view.getUint16(2)
+    return {
+        name: 'EnclosingMethod',
+        preview: preview_enclosing_method(constant_pool, class_index, method_index),
+        class: {
+            value: get_class(constant_pool, class_index, name => {
+                const parsed = parse_class(name)
+                if (typeof parsed === 'string') {
+                    return pretty_class(parsed)
+                } else {
+                    return parsed
+                }
+            }),
+            index: class_index
+        },
+        method_name: {
+            value: get_name_and_type(constant_pool, method_index, (name, _) => {
+                return {
+                    content: name,
+                    color: colors.method
+                }
+            }),
+            index: method_index
+        },
+        args: {
+            value: get_method_arguments(constant_pool, method_index),
+            index: method_index
+        },
+        returns: {
+            value: get_name_and_type(constant_pool, method_index, (_, type) =>
+                parse_method(type, (returns, _) => pretty_class(returns))),
+            index: method_index
+        }
+    }
+}
+
+function preview_enclosing_method(constant_pool: CPInfo[], class_index: number, method_index: number): Text {
+    const clazz = get_class(constant_pool, class_index, parse_class)
+    if (typeof clazz !== 'string')
+        return clazz
+
+    return get_name_and_type(constant_pool, method_index, (name, type) => {
+        return parse_method(type, (returns, args) => {
+            return [
+                ...pretty_class(returns, true),
+                {
+                    content: ' '
+                },
+                ...pretty_class(clazz, true),
+                {
+                    content: '.',
+                    color: colors.operator
+                },
+                {
+                    content: name,
+                    color: colors.method
+                },
+                ...pretty_args(args, true)
+            ]
+        })
+    })
+}
+
+function display_inner_classes(constant_pool: CPInfo[], view: DataView): InnerClassesAttribute {
+    const classes: InnerClass[] = new Array(view.getUint16(0))
+    for (let i = 0; i < classes.length; i++) {
+        classes[i] = display_inner_class(
+            constant_pool,
+            view.getUint16(2 + i * 8),
+            view.getUint16(4 + i * 8),
+            view.getUint16(6 + i * 8),
+            view.getUint16(8 + i * 8),
+        )
+    }
+    return {
+        name: 'InnerClasses',
+        classes
+    }
+}
+
+function display_inner_class(constant_pool: CPInfo[], inner_class_info_index: number, outer_class_info_index: number, inner_name_index: number, inner_class_access_flags: number): InnerClass {
+    return {
+        inner_class_info: display_class(constant_pool, inner_class_info_index),
+        outer_class_info: display_class(constant_pool, outer_class_info_index, true),
+        inner_name: {
+            value: inner_name_index === 0 ? {
+                content: '-',
+                color: colors.note
+            } : get_name(constant_pool, inner_name_index, name => { return {
+                content: name,
+                color: colors._class
+            }}),
+            index: inner_name_index
+        },
+        inner_class_access_flags: display_access_flags(inner_class_access_flags, 'inner_class')
+    }
+}
+
+function display_source_file(constant_pool: CPInfo[], view: DataView): SourceFileAttribute {
+    const index = view.getUint16(0)
+    return {
+        name: 'SourceFile',
+        source_file: {
+            value: get_name(constant_pool, index),
+            index
+        }
     }
 }
 
@@ -858,7 +1056,7 @@ function display_methods(constant_pool: CPInfo[], this_index: number, methods: M
             access_flags: display_access_flags(method.access_flags, 'method'),
             name: display_name(constant_pool, method.name_index, colors.method),
             descriptor: display_descriptor(constant_pool, method.descriptor_index, true),
-            attributes: []
+            attributes: display_unknown_attributes(constant_pool, method.attributes)
         })
     }
     return result
@@ -897,7 +1095,7 @@ function display_fields(constant_pool: CPInfo[], fields: FieldInfo[]): Fields {
             access_flags: display_access_flags(field.access_flags, 'field'),
             name: display_name(constant_pool, field.name_index, colors.field),
             descriptor: display_descriptor(constant_pool, field.descriptor_index),
-            attributes: []
+            attributes: display_unknown_attributes(constant_pool, field.attributes)
         })
     }
     return result
@@ -1006,7 +1204,7 @@ function display_interfaces(constant_pool: CPInfo[], interfaces: number[]): Cons
     return result
 }
 
-type AccessFlagsType = 'class' | 'method' | 'field'
+type AccessFlagsType = 'class' | 'method' | 'field' | 'inner_class'
 
 function display_access_flags(access_flags: number, type: AccessFlagsType): AccessFlags {
     return {
@@ -1070,26 +1268,26 @@ function is_annotation(access_flags: number): boolean {
 function get_access_flags(access_flags: number, type: AccessFlagsType, trim: boolean = true, preview: boolean = true): { content: string, color: string }[] {
     let flags: { name: string, implied?: boolean | number }[] = []
 
-    if (access_flags & 0x0001) { // field, method, class: public
+    if (access_flags & 0x0001) { // field, method, class, inner_class: public
         flags.push({
             name: 'public',
             implied: type === 'field' && access_flags & 0x4000
         })
     }
 
-    if (access_flags & 0x0002 && type !== 'class') { // field, method: private
+    if (access_flags & 0x0002 && type !== 'class') { // field, method, inner_class: private
         flags.push({
             name: 'private'
         })
     }
 
-    if (access_flags & 0x0004 && type !== 'class') { // field, method: protected
+    if (access_flags & 0x0004 && type !== 'class') { // field, method, inner_class: protected
         flags.push({
             name: 'protected'
         })
     }
 
-    if (access_flags & 0x0008 && type !== 'class') { // field, method: static
+    if (access_flags & 0x0008 && type !== 'class') { // field, method, inner_class: static
         flags.push({
             name: 'static',
             implied: type === 'field' && access_flags & 0x4000
@@ -1102,7 +1300,7 @@ function get_access_flags(access_flags: number, type: AccessFlagsType, trim: boo
         })
     }
 
-    if (access_flags & 0x0010) { // field, method, class: final
+    if (access_flags & 0x0010) { // field, method, class, inner_class: final
         flags.push({
             name: 'final',
             implied: type !== 'method' && access_flags & 0x4000
@@ -1141,7 +1339,7 @@ function get_access_flags(access_flags: number, type: AccessFlagsType, trim: boo
         }
     }
 
-    if (access_flags & 0x1000 && type === 'method') { // field, method, class: synthetic
+    if (access_flags & 0x1000 && type === 'method') { // field, method, class, inner_class: synthetic
         flags.push({
             name: 'synthetic',
             implied: access_flags & 0x0040
@@ -1160,27 +1358,27 @@ function get_access_flags(access_flags: number, type: AccessFlagsType, trim: boo
         }
     }
 
-    if (access_flags & 0x1000 && type !== 'method') { // field, method, class: synthetic
+    if (access_flags & 0x1000 && type !== 'method') { // field, method, class, inner_class: synthetic
         flags.push({
             name: 'synthetic'
         })
     }
 
-    if (access_flags & 0x0400 && type !== 'field') { // method, class: abstract
+    if (access_flags & 0x0400 && type !== 'field') { // method, class, inner_class: abstract
         flags.push({
             name: 'abstract',
             implied: type === 'class' && access_flags & 0x0200
         })
     }
 
-    if (access_flags & 0x0200 && type === 'class') {
+    if (access_flags & 0x0200 && (type === 'class' || type === 'inner_class')) {
         flags.push({
             name: 'interface',
             implied: access_flags & 0x2000
         })
     }
 
-    if (access_flags & 0x2000 && type === 'class') {
+    if (access_flags & 0x2000 && (type === 'class' || type === 'inner_class')) {
         flags.push({
             name: '@interface'
         })
@@ -1196,7 +1394,7 @@ function get_access_flags(access_flags: number, type: AccessFlagsType, trim: boo
         flags.push({
             name: 'module'
         })
-    } else if (type === 'class' && !(access_flags & 0x0200 || access_flags & 0x4000)) {
+    } else if ((type === 'class' || type === 'inner_class') && !(access_flags & 0x0200 || access_flags & 0x4000)) {
         flags.push({
             name: 'class'
         })
@@ -1254,7 +1452,7 @@ function constant_internal(constant: CPInfo): boolean {
     return constant.tag === 12 || constant.tag === 1
 }
 
-function constant_data(constant_pool: CPInfo[], constant: CPInfo): Record<string, [Text[]] | [Text[], string]> {
+function constant_data(constant_pool: CPInfo[], constant: CPInfo): Data {
     switch (constant.tag) {
         case 7:
             return get_class_data(constant_pool, constant.name_index)
@@ -1295,7 +1493,7 @@ function constant_data(constant_pool: CPInfo[], constant: CPInfo): Record<string
     }
 }
 
-function get_dynamic_data(constant_pool: CPInfo[], bootstrap_method_attr_index: number, name_and_type_index: number): Record<string, [Text[]] | [Text[], string]> {
+function get_dynamic_data(constant_pool: CPInfo[], bootstrap_method_attr_index: number, name_and_type_index: number): Data {
     return {
         'Tag': [[{
             content: 'Dynamic'
@@ -1318,7 +1516,7 @@ function get_dynamic_data(constant_pool: CPInfo[], bootstrap_method_attr_index: 
     }
 }
 
-function get_invoke_dynamic_data(constant_pool: CPInfo[], bootstrap_method_attr_index: number, name_and_type_index: number): Record<string, [Text[]] | [Text[], string]> {
+function get_invoke_dynamic_data(constant_pool: CPInfo[], bootstrap_method_attr_index: number, name_and_type_index: number): Data {
     return {
         'Tag': [[{
             content: 'Invoke Dynamic'
@@ -1339,7 +1537,7 @@ function get_invoke_dynamic_data(constant_pool: CPInfo[], bootstrap_method_attr_
     }
 }
 
-function get_method_type_data(constant_pool: CPInfo[], descriptor_index: number): Record<string, [Text[]] | [Text[], string]> {
+function get_method_type_data(constant_pool: CPInfo[], descriptor_index: number): Data {
     return {
         'Tag': [[{
             content: 'Method Type'
@@ -1353,7 +1551,7 @@ function get_method_type_data(constant_pool: CPInfo[], descriptor_index: number)
     }
 }
 
-function get_method_handle_data(constant_pool: CPInfo[], reference_kind: number, reference_index: number): Record<string, [Text[]] | [Text[], string]> {
+function get_method_handle_data(constant_pool: CPInfo[], reference_kind: number, reference_index: number): Data {
     return {
         'Tag': [[{
             content: 'Method Handle'
@@ -1363,7 +1561,7 @@ function get_method_handle_data(constant_pool: CPInfo[], reference_kind: number,
     }
 }
 
-function get_utf8_data(bytes: number[]): Record<string, [Text[]] | [Text[], string]> {
+function get_utf8_data(bytes: number[]): Data {
     return {
         'Tag': [[{
             content: 'UTF8'
@@ -1372,7 +1570,7 @@ function get_utf8_data(bytes: number[]): Record<string, [Text[]] | [Text[], stri
     }
 }
 
-function get_name_and_type_data(constant_pool: CPInfo[], name_index: number, descriptor_index: number): Record<string, [Text[]] | [Text[], string]> {
+function get_name_and_type_data(constant_pool: CPInfo[], name_index: number, descriptor_index: number): Data {
     return {
         'Tag': [[{
             content: 'Name & Type',
@@ -1382,7 +1580,7 @@ function get_name_and_type_data(constant_pool: CPInfo[], name_index: number, des
     }
 }
 
-function get_integer_data(bytes: number): Record<string, [Text[]] | [Text[], string]> {
+function get_integer_data(bytes: number): Data {
     return {
         'Tag': [[{
             content: 'Integer'
@@ -1391,7 +1589,7 @@ function get_integer_data(bytes: number): Record<string, [Text[]] | [Text[], str
     }
 }
 
-function get_float_data(bytes: number): Record<string, [Text[]] | [Text[], string]> {
+function get_float_data(bytes: number): Data {
     return {
         'Tag': [[{
             content: 'Float'
@@ -1400,7 +1598,7 @@ function get_float_data(bytes: number): Record<string, [Text[]] | [Text[], strin
     }
 }
 
-function get_long_data(high_bytes: number, low_bytes: number): Record<string, [Text[]] | [Text[], string]> {
+function get_long_data(high_bytes: number, low_bytes: number): Data {
     return {
         'Tag': [[{
             content: 'Long'
@@ -1409,7 +1607,7 @@ function get_long_data(high_bytes: number, low_bytes: number): Record<string, [T
     }
 }
 
-function get_double_data(high_bytes: number, low_bytes: number): Record<string, [Text[]] | [Text[], string]> {
+function get_double_data(high_bytes: number, low_bytes: number): Data {
     return {
         'Tag': [[{
             content: 'Double'
@@ -1418,7 +1616,7 @@ function get_double_data(high_bytes: number, low_bytes: number): Record<string, 
     }
 }
 
-function get_string_data(constant_pool: CPInfo[], string_index: number): Record<string, [Text[]] | [Text[], string]> {
+function get_string_data(constant_pool: CPInfo[], string_index: number): Data {
     return {
         'Tag': [[{
             content: 'String'
@@ -1427,7 +1625,7 @@ function get_string_data(constant_pool: CPInfo[], string_index: number): Record<
     }
 }
 
-function get_field_ref_data(constant_pool: CPInfo[], class_index: number, name_and_type_index: number): Record<string, [Text[]] | [Text[], string]> {
+function get_field_ref_data(constant_pool: CPInfo[], class_index: number, name_and_type_index: number): Data {
     return {
         'Tag': [[{
             content: 'Field Reference'
@@ -1455,7 +1653,7 @@ function get_field_ref_data(constant_pool: CPInfo[], class_index: number, name_a
     }
 }
 
-function get_method_ref_data(constant_pool: CPInfo[], class_index: number, name_and_type_index: number, is_interface: boolean): Record<string, [Text[]] | [Text[], string]> {
+function get_method_ref_data(constant_pool: CPInfo[], class_index: number, name_and_type_index: number, is_interface: boolean): Data {
     return {
         'Tag': [[{
             content: is_interface ? 'Interface Method Reference' : 'Method Reference'
@@ -1515,7 +1713,7 @@ function get_method_arguments(constant_pool: CPInfo[], index: number, is_descrip
     }
 }
 
-function get_class_data(constant_pool: CPInfo[], name_index: number): Record<string, [Text[]] | [Text[], string]> {
+function get_class_data(constant_pool: CPInfo[], name_index: number): Data {
     return {
         'Tag': [[{
             content: 'Class',
@@ -2161,9 +2359,12 @@ function get_name(constant_pool: CPInfo[], index: number, onsuccess: (value: str
     }
 }
 
-function display_class(constant_pool: CPInfo[], index: number): ConstantPoolRef {
+function display_class(constant_pool: CPInfo[], index: number, optional: boolean = false): ConstantPoolRef {
     return {
-        value: preview_this(constant_pool, index),
+        value: (optional && index === 0) ? {
+            content: '-',
+            color: colors.note
+        } : preview_this(constant_pool, index),
         index
     }
 }

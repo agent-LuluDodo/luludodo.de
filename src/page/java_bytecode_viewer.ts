@@ -258,7 +258,7 @@ async function openFile(file: File) {
 
     const classTitle = document.createElement('div')
     classTitle.classList.add('sub-title')
-    classTitle.appendChild(deco(await text('This', FONT_BIG), 'sub_title', false, style.text))
+    classTitle.appendChild(deco(await text('Class', FONT_BIG), 'sub_title', false, style.text))
     clazz.appendChild(classTitle)
 
     const classPreview = document.createElement('div')
@@ -276,7 +276,7 @@ async function openFile(file: File) {
     const accessFlagsText = document.createElement('td')
     accessFlagsText.classList.add('access-flags')
     accessFlagsText.appendChild(await text(data.info.access_flags.text, FONT_NORMAL, true))
-    accessFlagsText.appendChild(await text(data.info.access_flags.binary, FONT_NORMAL, true))
+    accessFlagsText.appendChild(await text(data.info.access_flags.binary, FONT_SMALL, true))
     accessFlags.appendChild(accessFlagsText)
     clazz.appendChild(accessFlags)
 
@@ -389,13 +389,123 @@ async function openFile(file: File) {
         methods.appendChild(row)
     }
 
+    const attributes = document.createElement('table')
+    attributes.classList.add('attributes')
+
+    const attributesTitle = document.createElement('div')
+    attributesTitle.classList.add('sub-title')
+    attributesTitle.appendChild(deco(await text('Attributes', FONT_BIG), 'sub_title', false, style.text))
+    attributes.appendChild(attributesTitle)
+
+    if (data.attributes.source_file !== undefined) {
+        const sourceFile = document.createElement('tr')
+        const sourceFileName = document.createElement('td')
+        sourceFileName.appendChild(await text({
+            content: 'Source File',
+            color: '#546e7a'
+        }))
+        sourceFile.appendChild(sourceFileName)
+        const sourceFileValue = document.createElement('td')
+        sourceFileValue.appendChild(await text(data.attributes.source_file.source_file.value))
+        sourceFileValue.appendChild(await text({
+            content: '#' + data.attributes.source_file.source_file.index,
+            color: '#546e7a'
+        }, FONT_SMALL))
+        sourceFile.appendChild(sourceFileValue)
+        attributes.appendChild(sourceFile)
+    }
+
+    if (data.attributes.inner_classes !== undefined) {
+        const innerClasses = document.createElement('tr')
+        const innerClassesName = document.createElement('td')
+        innerClassesName.appendChild(await text({
+            content: 'Inner Classes',
+            color: '#546e7a'
+        }))
+        innerClasses.appendChild(innerClassesName)
+        const innerClassesValue = document.createElement('td')
+        for (const classData of data.attributes.inner_classes.classes) {
+            const clazz = document.createElement('table')
+            clazz.classList.add('inner-class', 'data', 'collapsed')
+
+            const hitbox = document.createElement('div')
+            hitbox.classList.add('hitbox')
+            hitbox.onclick = () => {
+                const scroll = document.scrollingElement?.scrollTop
+                clazz.classList.toggle('collapsed')
+                if (scroll !== undefined) {
+                    document.scrollingElement!.scrollTop = scroll
+                }
+            }
+            clazz.appendChild(hitbox)
+
+            const innerClass = document.createElement('div')
+            innerClass.appendChild(await text(classData.inner_class_info.value, FONT_NORMAL, true))
+            innerClass.appendChild(await text({
+                content: '#' + classData.inner_class_info.index,
+                color: '#546e7a'
+            }, FONT_SMALL, true))
+            clazz.appendChild(innerClass)
+
+            const accessFlags = document.createElement('tr')
+            const accessFlagsName = document.createElement('td')
+            accessFlagsName.appendChild(await text({
+                content: 'Access Flags',
+                color: '#546e7a'
+            }))
+            accessFlags.appendChild(accessFlagsName)
+            const accessFlagsValue = document.createElement('td')
+            accessFlagsValue.appendChild(await text(classData.inner_class_access_flags.text, FONT_NORMAL, true))
+            accessFlagsValue.appendChild(await text(classData.inner_class_access_flags.binary, FONT_SMALL, true))
+            accessFlags.appendChild(accessFlagsValue)
+            clazz.appendChild(accessFlags)
+
+            const outerClass = document.createElement('tr')
+            const outerClassName = document.createElement('td')
+            outerClassName.appendChild(await text({
+                content: 'Outer Class',
+                color: '#546e7a'
+            }))
+            outerClass.appendChild(outerClassName)
+            const outerClassValue = document.createElement('td')
+            outerClassValue.appendChild(await text(classData.outer_class_info.value, FONT_NORMAL, true))
+            outerClassValue.appendChild(await text({
+                content: '#' + classData.outer_class_info.index,
+                color: '#546e7a'
+            }, FONT_SMALL, true))
+            outerClass.appendChild(outerClassValue)
+            clazz.appendChild(outerClass)
+
+            const innerName = document.createElement('tr')
+            const innerNameName = document.createElement('td')
+            innerNameName.appendChild(await text({
+                content: 'Inner Name',
+                color: '#546e7a'
+            }))
+            innerName.appendChild(innerNameName)
+            const innerNameValue = document.createElement('td')
+            innerNameValue.appendChild(await text(classData.inner_name.value, FONT_NORMAL, true))
+            innerNameValue.appendChild(await text({
+                content: '#' + classData.inner_name.index,
+                color: '#546e7a'
+            }, FONT_SMALL, true))
+            innerName.appendChild(innerNameValue)
+            clazz.appendChild(innerName)
+
+            innerClassesValue.appendChild(clazz)
+        }
+        innerClasses.appendChild(innerClassesValue)
+        attributes.appendChild(innerClasses)
+    }
+
     parsing.remove()
     upload_prompt.hidden = false
-    file_content.appendChild(deco(metadata , 'subtle'))
-    file_content.appendChild(deco(constants, 'subtle'))
-    file_content.appendChild(deco(clazz    , 'subtle'))
-    file_content.appendChild(deco(fields   , 'subtle'))
-    file_content.appendChild(deco(methods  , 'subtle'))
+    file_content.appendChild(deco(metadata  , 'subtle'))
+    file_content.appendChild(deco(constants , 'subtle'))
+    file_content.appendChild(deco(clazz     , 'subtle'))
+    file_content.appendChild(deco(fields    , 'subtle'))
+    file_content.appendChild(deco(methods   , 'subtle'))
+    file_content.appendChild(deco(attributes, 'subtle'))
 }
 
 export default load;

@@ -738,7 +738,7 @@ a {
             margin-top: 90px;
         }
         
-        .fields, .methods {
+        .fields, .methods, .attributes {
             td {
                 padding: 3px 9px 6px 9px;
             }
@@ -772,12 +772,6 @@ a {
                     padding: 9px;
                 }
                 
-                .access-flags {
-                    canvas:last-child {
-                        padding-left: 9px;
-                    }
-                }
-                
                 td {
                     font-size: 0;
                 }
@@ -799,6 +793,87 @@ a {
         .fields {
             .empty {
                 padding: 9px;
+            }
+        }
+        
+        .attributes {
+            tr {
+                vertical-align: top;
+                width: 100%;
+            }
+            
+            > tr > td:first-child {
+                position: relative;
+                z-index: 2;
+                pointer-events: none;
+            }
+            
+            td:last-child {
+                min-width: 100%;
+            }
+            
+            canvas {
+                font-size: 0;
+                display: inline-block;
+            }
+            
+            td:last-child canvas:not(:first-child):last-child {
+                padding-left: 9px;
+            }
+            
+            .inner-class {
+                position: relative;
+                padding: 3px 0;
+                
+                tr:last-child > td > canvas {
+                    margin-bottom: -6px;
+                }
+            }
+            
+            .inner-class:first-child {
+                margin-top: -3px;
+            }
+            
+            .inner-class:last-child {
+                margin-bottom: -3px;
+            }
+            
+            .inner-class.collapsed > tr {
+                display: none;
+            }
+            
+            .inner-class > .hitbox, .inner-class::before, .inner-class::after {
+                content: '';
+                display: block;
+                position: absolute;
+                left: -300px;
+                width: calc(100dvw + 300px);
+                top: -3px;
+                bottom: 3px;
+            }
+            
+            .inner-class:has(> .hitbox:hover) {
+                z-index: 1;
+            }
+            
+            .inner-class > .hitbox {
+                z-index: 2;
+                cursor: pointer;
+            }
+            
+            .inner-class:has(> .hitbox:hover)::before {
+                background-color: #1b2529;
+                z-index: -1;
+                pointer-events: none;
+            }
+            
+            .inner-class:has(> .hitbox:hover)::after {
+                left: 0;
+                right: unset;
+                width: calc(100dvw - 276px);
+                background: linear-gradient(to right, transparent calc(100% - 30px), #1b2529 calc(100% - 15px));
+                z-index: 1;
+                pointer-events: none;
             }
         }
         
@@ -837,27 +912,12 @@ a {
                     vertical-align: top;
                 }
                 
-                .preview {
-                    padding: 6px 3px 3px;
+                td:last-child {
+                    min-width: 100%;
                 }
                 
-                .data {
-                    font-size: 0;
-                    padding: 0;
-                    border-spacing: 12px 3px;
-                    background-color: transparent;
-                    
-                    canvas {
-                        display: inline-block;
-                    }
-                    
-                    td:first-child {
-                        vertical-align: top;
-                    }
-                    
-                    td:last-child > div > canvas:first-child {
-                        padding-right: 9px;
-                    }
+                .preview {
+                    padding: 6px 3px 3px;
                 }
             }
             
@@ -914,6 +974,32 @@ a {
             .html {
                 padding: 18px 15px 12px 18px;
                 background-color: #9e2927;
+            }
+        }
+        
+        .data {
+            font-size: 0;
+            padding: 0;
+            border-spacing: 12px 3px;
+            background-color: transparent;
+            min-width: fit-content;
+            
+            canvas {
+                display: inline-block;
+            }
+            
+            td {
+                padding: 0;
+                width: fit-content;
+                height: fit-content;
+            }
+            
+            td:first-child {
+                vertical-align: top;
+            }
+            
+            td:last-child > div > canvas:first-child {
+                padding-right: 9px;
             }
         }
     }

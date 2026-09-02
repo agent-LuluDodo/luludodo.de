@@ -3,13 +3,13 @@ import next_frame from './next_frame.ts';
 let paused = false
 let ondrop: ((files: FileList, callback: (success: boolean) => void) => void) | null = null
 export function init() {
-    window.addEventListener('dragenter', () => {
-        if (!paused && ondrop !== null) {
+    window.addEventListener('dragenter', ev => {
+        if (!paused && ondrop !== null && ev.dataTransfer?.types.includes('Files')) {
             document.body.classList.add('potential-drop')
         }
     })
     window.addEventListener('dragover', ev => {
-        if (!paused && ondrop !== null) {
+        if (!paused && ondrop !== null && ev.dataTransfer?.types.includes('Files')) {
             if (!document.body.classList.contains('potential-drop')) {
                 document.body.classList.add('potential-drop')
             }
@@ -22,6 +22,8 @@ export function init() {
         }
     })
     window.addEventListener('drop', async ev => {
+        console.log(ev.dataTransfer)
+
         function show(success: boolean) {
             let clazz = success ? 'drop-success' : 'drop-failure'
             document.body.classList.remove('potential-drop')

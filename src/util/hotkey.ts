@@ -3,7 +3,7 @@ let paused = false
 
 export function init() {
     window.addEventListener('keydown', (e) => {
-        if (!paused && hotkeys.hasOwnProperty(e.key)) {
+        if (!paused && !e.repeat && hotkeys.hasOwnProperty(e.key)) {
             hotkeys[e.key]()
             e.preventDefault()
         }
