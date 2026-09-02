@@ -155,6 +155,7 @@ type CodeAttribute = {
     attributes: Attributes
 }
 
+// @ts-ignore
 type StackMapTableAttribute = {
     name: 'StackMapTable'
 }
@@ -204,14 +205,17 @@ type SourceDebugExtensionAttribute = {
     name: 'SourceDebugExtension'
 }
 
+// @ts-ignore
 type LineNumberTableAttribute = {
     name: 'LineNumberTable'
 }
 
+// @ts-ignore
 type LocalVariableTableAttribute = {
     name: 'LocalVariableTable'
 }
 
+// @ts-ignore
 type LocalVariableTypeTableAttribute = {
     name: 'LocalVariableTypeTable'
 }
