@@ -12,17 +12,6 @@
     overflow-x: hidden;
 }
 
-.popup-container {
-    position: relative;
-    width: 100%;
-    height: 100%;
-}
-
-.popup {
-    background: var(--bg);
-    width: 0.2rem;
-}
-
 .text {
     display: block;
     image-rendering: pixelated;
@@ -504,7 +493,7 @@ footer {
     }
 }
 
-.chains .html, .building .html {
+.chains .html, .building .html, .new .html {
     padding: 21px 18px 15px 21px;
     background: var(--background);
 }
@@ -517,8 +506,8 @@ footer {
 .home-container {
     display: grid;
     grid-template-areas:
-        ". welcome socials"
-        ". mods  socials";
+        "new welcome socials"
+        "new mods    socials";
     grid-template-columns: 1fr 1fr 1fr;
     justify-items: start;
     align-items: start;
@@ -540,6 +529,11 @@ footer {
     
     .socials-wrapper {
         grid-area: socials;
+        height: calc(100% - 180px);
+    }
+    
+    .new-wrapper {
+        grid-area: new;
         height: calc(100% - 180px);
     }
     
@@ -570,6 +564,11 @@ footer {
         align-items: center;
     }
     
+    .new:not(.deco) {
+        width: fit-content;
+        margin: 9px auto 0;
+    }
+    
     .socials > :last-child {
         padding-top: 9px;
         
@@ -585,11 +584,17 @@ footer {
     .home-container {
         grid-template-areas:
             "welcome welcome"
-            "mods socials";
+            "new     socials"
+            "mods    socials";
         grid-template-columns: 1fr 1fr;
         
         .socials-wrapper {
             height: 100%;
+        }
+        
+        .new-wrapper {
+            height: fit-content;
+            margin-bottom: 60px;
         }
     }
 }
@@ -598,8 +603,9 @@ footer {
     .home-container {
         grid-template-areas:
             "welcome"
+            "new    "
             "socials"
-            "mods";
+            "mods   ";
         grid-template-columns: 1fr;
         
         .socials-wrapper {
@@ -1078,6 +1084,157 @@ a {
     }
 }
 
+.markdown-buttons {
+    .text-button {
+        position: relative;
+        left: calc(max(0px, 50dvw - 450px));
+        width: fit-content;
+        margin-top: -54px;
+        margin-bottom: 15px;
+    }
+}
+
+body:has(#local-storage-popup) {
+    overflow: hidden;
+}
+
+#local-storage-popup {
+    position: fixed;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1;
+    background-color: #000A;
+    
+    > div {
+        position: relative;
+        padding: 0;
+        margin: 50dvh 0 0 50dvw;
+        translate: -50% -50%;
+        
+        .html {
+            width: fit-content;
+            max-width: calc(100dvw - 30px);
+            max-height: 100dvh;
+            background-color: var(--background);
+        }
+    }
+    
+    .buttons {
+        position: absolute;
+        display: flex;
+        flex-direction: row;
+        gap: 9px;
+        width: fit-content;
+        padding: 21px;
+        
+        right: -3px;
+        bottom: -3px;
+        
+        .text-button {
+            width: fit-content;
+            padding: 3px;
+        }
+    }
+}
+
+.tools {
+    .mod:hover, .mod:focus-visible {
+        filter: brightness(250%);
+        
+        .top, .bottom {
+            filter: brightness(40%);
+        }
+    }
+}
+
+.rng {
+    width: 100%;
+    
+    .number {
+        display: flex;
+        flex-direction: row;
+        gap: 3px;
+        padding: 3px;
+        margin: auto;
+        width: fit-content;
+        max-width: calc(100dvw - 6px);
+        overflow-x: auto;
+        
+        > :first-child {
+            clip-path: polygon(
+                    0px calc(100% - 6px),
+                    3px calc(100% - 6px),
+                    3px calc(100% - 3px),
+                    6px calc(100% - 3px),
+                    6px 100%,
+                    100% 100%,
+                    100% 0px,
+                    6px 0px,
+                    6px 3px,
+                    3px 3px,
+                    3px 6px,
+                    0px 6px
+            );
+        }
+        
+        > * {
+            height: fit-content;
+            background-color: var(--background);
+            padding: 12px 9px 3px 12px;
+        }
+        
+        .reroll {
+            display: block;
+            padding: 12px 12px 9px 9px;
+            width: 21px;
+        }
+        
+        .clickable {
+            cursor: pointer;
+        }
+        
+        .clickable:hover {
+            filter: invert(1) hue-rotate(180deg);
+        }
+        
+        > :last-child {
+            clip-path: polygon(
+                    100% calc(100% - 6px),
+                    calc(100% - 3px) calc(100% - 6px),
+                    calc(100% - 3px) calc(100% - 3px),
+                    calc(100% - 6px) calc(100% - 3px),
+                    calc(100% - 6px) 100%,
+                    0px 100%,
+                    0px 0px,
+                    calc(100% - 6px) 0px,
+                    calc(100% - 6px) 3px,
+                    calc(100% - 3px) 3px,
+                    calc(100% - 3px) 6px,
+                    100% 6px
+            );
+        }
+        
+        * {
+            height: fit-content;
+        }
+        
+        .value {
+            display: flex;
+            flex-direction: row;
+        }
+    }
+    
+    > :nth-child(3n + 2) {
+        margin-bottom: 12px;
+    }
+    
+    > :last-child:last-child {
+        margin-bottom: 90px;
+    }
+}
+
 #progress {
     position: fixed;
     top: 0;
@@ -1091,17 +1248,4 @@ a {
         transition: width 100ms ease-out;
         height: 100%;
     }
-}
-
-#popup {
-    position: fixed;
-    z-index: 100;
-    top: 0;
-    left: 0;
-    width: 100dvw;
-    height: 100dvh;
-}
-
-#popup:empty {
-    display: none;
 }

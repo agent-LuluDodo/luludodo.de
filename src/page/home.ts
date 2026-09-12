@@ -4,7 +4,7 @@ import setStyle, {type Style} from '../util/style.ts';
 import deco from '../util/deco.ts';
 import text, {FONT_BIG} from '../util/font.ts';
 import {mods} from './mod.ts';
-import {iconButton} from '../util/button.ts';
+import {iconButton, textButton} from '../util/button.ts';
 import setTitle from '../util/title.ts';
 
 export const style: Style = {
@@ -13,6 +13,11 @@ export const style: Style = {
     background: '#433f66',
     altBackground: '#000',
     link: '#AAA'
+}
+
+const newestAddition = {
+    url: 'rng',
+    name: 'Random Numbers'
 }
 
 const socials = {
@@ -53,6 +58,18 @@ async function load(app: HTMLElement) {
     modsWrapper.appendChild(modsDiv)
 
     content.appendChild(modsWrapper)
+
+    const newWrapper = document.createElement('div')
+    newWrapper.classList.add('new-wrapper')
+
+    newWrapper.appendChild(deco(await text('My newest addition'), 'new'))
+
+    const newDiv = document.createElement('div')
+    newDiv.classList.add('new')
+    newDiv.appendChild(await textButton(newestAddition.name, '/' + newestAddition.url))
+    newWrapper.appendChild(newDiv)
+
+    content.appendChild(newWrapper)
 
     const socialsWrapper = document.createElement('div')
     socialsWrapper.classList.add('socials-wrapper')

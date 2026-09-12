@@ -202,10 +202,6 @@ async function load(app: HTMLElement, subpath: string) {
     container.appendChild(markdownDiv)
     app.appendChild(container)
 
-    const popup = document.createElement('div')
-    popup.id = 'popup'
-    app.appendChild(popup)
-
     app.appendChild(await footer())
 }
 

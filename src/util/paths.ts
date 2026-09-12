@@ -12,6 +12,9 @@ export const paths: Record<string, string> = {
     'privacy-policy': 'privacy_policy',
     'terms-of-use': 'terms_of_use',
     'java-bytecode-viewer': 'java_bytecode_viewer',
+    'local-storage': 'local_storage',
+    'tools': 'tools',
+    'rng': 'rng',
 
     'test-font': 'test_font',
     'test-code': 'test_code',
@@ -51,6 +54,10 @@ async function navigate() {
             window.scrollTo(0, 0)
         }
     }
+}
+
+export async function clearHash() {
+    window.location.hash = ''
 }
 
 export async function init() {

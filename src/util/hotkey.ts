@@ -1,11 +1,17 @@
-let hotkeys: Record<string, () => unknown> = {}
+let hotkeys: Record<string, (() => unknown)[]> = {}
 let paused = false
 
 export function init() {
     window.addEventListener('keydown', (e) => {
-        if (!paused && !e.repeat && hotkeys.hasOwnProperty(e.key)) {
-            hotkeys[e.key]()
+        console.log(e)
+        if (!paused && hotkeys.hasOwnProperty(e.key)) {
+            console.log('2')
             e.preventDefault()
+            if (!e.repeat) {
+                for (const hotkey of (hotkeys[e.key.toUpperCase()] ?? [])) {
+                    hotkey()
+                }
+            }
         }
     })
 }
@@ -23,9 +29,13 @@ export function resumeHotkeyUpdates() {
 }
 
 export default function hotkey(key: string, action?: () => unknown) {
+    key = key.toUpperCase()
     if (action === undefined) {
         delete hotkeys[key]
     } else {
-        hotkeys[key] = action
+        if (!hotkeys.hasOwnProperty(key)) {
+            hotkeys[key] = []
+        }
+        hotkeys[key].push(action)
     }
 }

@@ -22,6 +22,7 @@ export default function icon(src: string, color: string, width: number = 0, heig
         canvas.classList.remove('icon-loading')
         canvas.ariaLabel = img.ariaLabel
         canvas.ariaHidden = img.ariaHidden
+        canvas.onclick = img.onclick
         img.replaceWith(canvas)
 
         if (onload) onload(canvas)
