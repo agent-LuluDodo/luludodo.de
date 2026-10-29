@@ -8,7 +8,7 @@ import {iconButton} from '../util/button.ts';
 import error from '../error/error.ts';
 import {getLink} from '../util/link.ts';
 import * as Modrinth from '../api/modrinth.ts';
-import * as Curseforge from '../api/cfwidget.ts';
+import * as Curseforge from '../api/curseforge.ts';
 import * as Github from '../api/github.ts';
 import setTitle from '../util/title.ts';
 
@@ -156,7 +156,7 @@ async function load(app: HTMLElement, subpath: string) {
         }
 
         Curseforge.getProject(mod.curseforge, async response => {
-            await updateDownloads(response.downloads.total)
+            await updateDownloads(response.downloadCount)
         })
     }
     if (mod.github) {

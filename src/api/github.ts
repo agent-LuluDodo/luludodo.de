@@ -61,5 +61,5 @@ type Release = {
 }
 
 export function getReleases(user: string, id: string, onsuccess: (response: Release[]) => unknown) {
-    request('GET', `https://api.github.com/repos/${user}/${id}/releases`, null, onsuccess)
+    request('GET', `https://api.github.com/repos/${user}/${id}/releases`, null, null, onsuccess)
 }

@@ -1,4 +1,4 @@
-export default function request(method: 'GET', url: string, body: object | null, onsuccess: (response: any) => unknown) {
+export default function request(method: 'GET', url: string, body: object | null, headers: Record<string, string> | null, onsuccess: (response: any) => unknown) {
     const request = new XMLHttpRequest()
     request.onreadystatechange = function () {
         if (request.readyState === XMLHttpRequest.DONE && request.status === 200) {
@@ -10,5 +10,11 @@ export default function request(method: 'GET', url: string, body: object | null,
         }
     }
     request.open(method, url)
-    request.send(JSON.stringify(body))
+    request.setRequestHeader('Accept', 'application/json')
+    if (headers !== null) {
+        for (const [key, value] of Object.entries(headers)) {
+            request.setRequestHeader(key, value)
+        }
+    }
+    request.send(body === null ? null : JSON.stringify(body))
 }

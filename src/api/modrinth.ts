@@ -55,5 +55,5 @@ type Project = {
 }
 
 export function getProject(id: string, onsuccess: (response: Project) => unknown) {
-    request('GET', `https://api.modrinth.com/v2/project/${id}`, null, onsuccess)
+    request('GET', `https://api.modrinth.com/v2/project/${id}`, null, null, onsuccess)
 }
