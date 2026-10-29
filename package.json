@@ -15,5 +15,9 @@
     "vite": "^8.0.12",
     "vite-plugin-markdown": "^2.2.0",
     "wrangler": "^4.96.0"
+  },
+  "allowScripts": {
+    "esbuild@0.28.2": true,
+    "workerd@1.20261023.1": true
   }
 }
