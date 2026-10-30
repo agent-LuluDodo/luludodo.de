@@ -31,4 +31,16 @@
         <loc>https://luludodo.de/mod/DefinitelyMyCoords</loc>
         <lastmod>2026-06-03</lastmod>
     </url>
+    <url>
+        <loc>https://luludodo.de/rng</loc>
+        <lastmod>2026-08-15</lastmod>
+    </url>
+    <url>
+        <loc>https://luludodo.de/java-bytecode-viewer</loc>
+        <lastmod>2026-08-10</lastmod>
+    </url>
+    <url>
+        <loc>https://luludodo.de/mod-analyser</loc>
+        <lastmod>2026-10-30</lastmod>
+    </url>
 </urlset>

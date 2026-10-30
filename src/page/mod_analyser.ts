@@ -11,6 +11,11 @@ import {BlobReader, BlobWriter, TextWriter, ZipReader} from "@zip.js/zip.js";
 import blobUrl from "../util/blob_url.ts";
 import capitalize from "../util/capitalize.ts";
 
+// TODO: link to curseforge/modrinth
+//       multi-file d'n'd support
+//       mod pack support
+//       better fallback image
+
 const style: Style = {
     text: '#eeffff',
     altText: '#546e7a',
@@ -114,7 +119,7 @@ async function openFile(file: File) {
             error: false,
             name: fabricModJson.name ?? 'Unknown',
             id: fabricModJson.id ?? 'unknown',
-            icon: blobUrl('icon', iconBlob, '/TODO'),
+            icon: blobUrl('icon', iconBlob, '/icon/not-found.png'),
             authors,
             contributors,
             description: fabricModJson.description ?? '-',
