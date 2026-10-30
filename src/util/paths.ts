@@ -3,6 +3,7 @@ import {pauseTitleUpdates, resetTitle, resumeTitleUpdates} from './title.ts';
 import progress from './progress.ts';
 import {pauseDropUpdates, resetDrop, resumeDropUpdates} from './drop.ts';
 import {pauseHotkeyUpdates, resetHotkeys, resumeHotkeyUpdates} from './hotkey.ts';
+import {resetUrls} from "./blob_url.ts";
 
 export const paths: Record<string, string> = {
     '': 'home',
@@ -12,6 +13,7 @@ export const paths: Record<string, string> = {
     'privacy-policy': 'privacy_policy',
     'terms-of-use': 'terms_of_use',
     'java-bytecode-viewer': 'java_bytecode_viewer',
+    'mod-analyser': 'mod_analyser',
     'local-storage': 'local_storage',
     'tools': 'tools',
     'rng': 'rng',
@@ -102,6 +104,7 @@ export async function load(path: string, subpath: string) {
     resetTitle()
     resetDrop()
     resetHotkeys()
+    resetUrls()
 
     const index = ++curIndex;
 

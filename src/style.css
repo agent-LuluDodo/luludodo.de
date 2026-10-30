@@ -1235,6 +1235,97 @@ body:has(#local-storage-popup) {
     }
 }
 
+.mod-analyser {
+    #upload-prompt {
+        display: block;
+        margin: 0 auto 90px;
+        width: max-content;
+    }
+
+    .mod-container {
+        padding: 9px;
+        margin: 0 auto 90px;
+        width: 50rem;
+        max-width: calc(100dvw - 18px);
+    }
+
+    .mod {
+        padding: 21px;
+        background-color: var(--background);
+    }
+
+    .mod:hover {
+        filter: none;
+    }
+
+    .header {
+        display: grid;
+        grid-template-areas:
+                "icon name"
+                "icon credits-intro"
+                "icon credits";
+        grid-template-columns: auto 1fr;
+        grid-template-rows: auto auto auto;
+        height: calc(10rem + 6px);
+    }
+
+    .icon {
+        grid-area: icon;
+        height: 10rem;
+        width: 10rem;
+        background: var(--alt-background);
+        padding: 3px;
+    }
+
+    .name {
+        grid-area: name;
+        margin: 9px 0 9px 21px;
+    }
+
+    .credits-intro {
+        grid-area: credits-intro;
+        margin: 3px 0 0 21px;
+    }
+
+    .credits {
+        display: flex;
+        grid-area: credits;
+        padding: 0 21px 12px 21px;
+        margin-right: -21px;
+        flex-direction: row;
+        overflow-x: auto;
+    }
+
+    .links {
+        display: flex;
+        padding: 9px 21px;
+        margin: 0 -21px;
+        flex-direction: row;
+        gap: 9px;
+        overflow-x: auto;
+
+        .button {
+            background-color: var(--alt-background)
+        }
+    }
+
+    .links:empty {
+        display: none;
+    }
+
+    .description {
+        margin: 15px -12px 15px 0;
+
+        canvas {
+            display: inline-block;
+        }
+    }
+
+    .version {
+        margin: 9px 0 -9px;
+    }
+}
+
 #progress {
     position: fixed;
     top: 0;
