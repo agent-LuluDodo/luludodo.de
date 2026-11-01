@@ -1238,13 +1238,15 @@ body:has(#local-storage-popup) {
 .mod-analyser {
     #upload-prompt {
         display: block;
-        margin: 0 auto 90px;
+        padding: 0 0 90px;
+        margin: 0 auto;
         width: max-content;
+        cursor: default;
     }
 
     .mod-container {
-        padding: 9px;
-        margin: 0 auto 90px;
+        padding: 0 9px 90px;
+        margin: 0 auto 0;
         width: 50rem;
         max-width: calc(100dvw - 18px);
     }
@@ -1318,11 +1320,19 @@ body:has(#local-storage-popup) {
     }
 
     .description {
-        margin: 15px -12px 9px 0;
+        margin: 15px -12px 3px 0;
 
         canvas {
             display: inline-block;
         }
+    }
+    
+    .details {
+        display: flex;
+        flex-direction: row;
+        padding: 9px 21px;
+        margin: -3px -21px;
+        overflow-x: auto;
     }
     
     .footer {
@@ -1350,6 +1360,25 @@ body:has(#local-storage-popup) {
         width: max-content;
         background-color: #9e2927;
         padding: 30px 24px 24px 33px;
+    }
+    
+    .spacer {
+        width: 360px;
+        height: 3px;
+        margin: 0 auto 90px;
+        background-color: var(--alt-text);
+    }
+    
+    .info {
+        min-height: 0;
+        height: max-content;
+        width: max-content;
+        margin: auto;
+        padding: 0 0 90px;
+        
+        .markdown {
+            background-color: var(--background);
+        }
     }
 }
 

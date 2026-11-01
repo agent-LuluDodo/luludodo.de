@@ -4,21 +4,33 @@ import setTitle from '../util/title.ts'
 import header from '../util/header.ts'
 import footer from '../util/footer.ts'
 import deco from '../util/deco.ts'
-import text, {FONT_BIG, FONT_NORMAL, FONT_SMALL} from '../util/font.ts'
+import text, {FONT_BIG, FONT_SMALL} from '../util/font.ts'
 import {iconButton, textButton} from '../util/button.ts'
 import {showDialog} from '../file/helper.ts'
 import {BlobReader, BlobWriter, type Entry, TextWriter, ZipReader} from '@zip.js/zip.js'
-import blobUrl from '../util/blob_url.ts'
-import capitalize from '../util/capitalize.ts'
-import hash from '../util/hash.ts'
-import {versionFromHash} from '../api/modrinth.ts'
-import {getMod, matchFingerprint} from '../api/curseforge.ts'
+import {addBlobUrl, clearBlobUrl} from '../util/blob_url.ts'
 import {load as toml} from 'js-toml'
+import markdown from '../util/markdown.ts';
+import {
+    type AdditionalInfo,
+    type AnalysedMod, formatToName,
+    type InfoState,
+    loaderToName,
+    type ModAnalyser,
+    type ModInfo, typeToName
+} from './mod_analyser/mod.ts';
+import fabric from './mod_analyser/fabric.ts';
+import forge from './mod_analyser/forge.ts';
+import neoforge from './mod_analyser/neoforge.ts';
+import oldForge from './mod_analyser/old_forge.ts';
+import findOnModrinth from './mod_analyser/modrinth.ts';
+import findOnCurseforge from './mod_analyser/curseforge.ts';
+import quilt from './mod_analyser/quilt.ts';
+import mrpack from './mod_analyser/mrpack.ts';
 
-// TODO: link to curseforge/modrinth
-//       multi-file d'n'd support
-//       mod pack support
-//       better fallback image
+// TODO: multi-file d'n'd support
+//       mod pack support - WIP
+//       Jar-in-Jar support
 
 const style: Style = {
     text: '#eeffff',
@@ -49,462 +61,346 @@ async function load(app: HTMLElement) {
 
     onDrop(openFile)
 
+    const spacer = document.createElement('div')
+    spacer.classList.add('spacer')
+    content.appendChild(spacer)
+
+    const infoWrapper = document.createElement('div')
+    infoWrapper.classList.add('info')
+    const info = await markdown('mod-analyser', 'info')
+    info.classList.add('corner-8')
+    infoWrapper.appendChild(info)
+    content.appendChild(infoWrapper)
+
     app.appendChild(content)
 
     app.appendChild(await footer())
 }
 
-type ModError = {
-    error: true,
-    message: string,
-}
-
-type Loader = 'unknown' | 'fabric' | 'forge' | 'neoforge'
-
-type Mod = {
-    error: false,
-    loader: Loader,
-    name: string,
-    id: string,
-    icon: string,
-    authors: string[],
-    contributors: string[],
-    description: string,
-    links: Record<string, string>,
-    version: string,
-    curseforge: HTMLElement,
-    modrinth: HTMLElement,
-}
-
-type Analysis = {
-    name?: string,
-    id?: string,
-    icon?: string,
-    authors: string[],
-    contributors: string[],
-    description?: string,
-    links: Record<string, string>,
-    version?: string,
-}
-
-type AnalysisWithLoader = {
-    loader: Loader
-} & Analysis
-
 async function openFile(file: File) {
+    const showMod = document.getElementById('show-mod')!
+
+    for (let i = showMod.childNodes.length - 1; i >= 0; i--) {
+        showMod.childNodes[i].remove()
+    }
+
+    clearBlobUrl('icon')
+
+    let infos: ModInfo[] = []
+
     try {
 
-        const blobReader = new BlobReader(file)
-        const zipReader = new ZipReader(blobReader)
+        await analyseFile(file, infos)
 
-        const entries = await zipReader.getEntries()
+    } catch (e) {
+        console.error('Error analysing file', e)
+    }
 
-        const writer = new TextWriter()
+    for (const info of infos) {
+        await updateMod(info)
+        showMod.appendChild(info.element)
+    }
+}
 
-        let analysis: AnalysisWithLoader =
-            await analyse(writer, entries, 'fabric.mod.json', 'fabric', 'json', analyseFabricMod) ??
-            await analyse(writer, entries, 'META-INF/mods.toml', 'forge', 'toml', analyseForgeMod) ??
-            await analyse(writer, entries, 'META-INF/neoforge.mods.toml', 'neoforge', 'toml', analyseForgeMod) ??
-            await analyse(writer, entries, 'mcmod.info', 'forge', 'json', analyseOldForgeMod) ??
-            { loader: 'unknown', authors: [], contributors: [], links: {} }
+async function analyseFile(file: Blob, infos: ModInfo[]) {
+    const blobReader = new BlobReader(file)
+    const zipReader = new ZipReader(blobReader)
 
+    const entries = await zipReader.getEntries()
+
+    const mods: AnalysedMod[] = []
+
+    await analyse(entries, mods, fabric)
+    await analyse(entries, mods, forge)
+    await analyse(entries, mods, neoforge)
+    await analyse(entries, mods, mrpack)
+    await analyse(entries, mods, oldForge)
+    await analyse(entries, mods, quilt)
+
+    let first = true
+    let primary: ModInfo
+    let state: InfoState
+    for (const mod of mods) {
         let iconBlob: Blob | null = null
-        if (analysis.icon) {
-            const entry = entries.find((entry) => entry.filename === analysis.icon)
-
-            if (entry !== undefined && !entry.directory) {
-                const iconWriter = new BlobWriter()
-                iconBlob = await entry.getData(iconWriter)
+        if (mod.icon) {
+            const iconFile = entries.find(file => file.filename === mod.icon)
+            if (iconFile && !iconFile.directory) {
+                const writer = new BlobWriter()
+                iconBlob = await iconFile.getData(writer)
             }
         }
 
-        const modrinth = await iconButton('modrinth', '')
-        modrinth.hidden = true
-        const curseforge = await iconButton('curseforge', '')
-        curseforge.hidden = true
+        const details: Record<string, string> = {}
+        if (mod.type) {
+            details['Type'] = typeToName[mod.type]
+        }
+        if (mod.format) {
+            details['Format'] = formatToName[mod.format]
+        }
+        if (mod.loader) {
+            details['Loader'] = loaderToName[mod.loader]
+        }
 
-        await findOnModrinth(modrinth, file)
-        await findOnCurseforge(curseforge, file)
+        const info: ModInfo = {
+            element: document.createElement('div'),
+            name: mod.name ?? 'Unknown Name',
+            id: mod.id ?? 'unknown',
+            icon: addBlobUrl('icon', iconBlob, '/icon/mod-not-found.png'),
+            authors: mod.authors ?? [],
+            contributors: mod.contributors ?? [],
+            description: mod.description ?? '-',
+            links: mod.links ?? {},
+            details,
+            version: mod.version ?? 'unknown'
+        }
 
-        await showMod({
-            error: false,
-            loader: analysis.loader,
-            name: analysis.name ?? 'Missing Name',
-            id: analysis.id ?? 'unknown',
-            icon: blobUrl('icon', iconBlob, '/icon/mod-not-found.png'),
-            authors: analysis.authors,
-            contributors: analysis.contributors,
-            description: analysis.description ?? 'Missing Description',
-            links: analysis.links,
-            version: analysis.version ?? 'unknown',
-            modrinth,
-            curseforge,
-        })
-    } catch (err) {
-        console.error(err)
-        await showMod({
-            error: true,
-            message: 'Malformed or unsupported Mod'
-        })
+        if (first) {
+            first = false
+            primary = info
+            state = {
+                name: !!mod.name,
+                icon: !!mod.icon,
+                downloads: 0,
+                description: !!mod.description,
+            }
+        }
+
+        infos.push(info)
+    }
+
+    if (first) {
+        const info = {
+            element: document.createElement('div'),
+            name: 'Unsupported Mod',
+            id: 'unknown',
+            icon: '/icon/mod-not-supported.png',
+            authors: [],
+            contributors: [],
+            description: 'Couldn\'t find mod metadata!',
+            links: {},
+            details: {},
+            version: 'unknown',
+        }
+
+        infos.push(info)
+
+        primary = info
+        state = {
+            name: false,
+            icon: false,
+            downloads: 0,
+            description: false,
+        }
+    }
+
+    async function callback(additional: AdditionalInfo) {
+        if (!state.name) {
+            state.name = true
+            primary.name = additional.name
+        }
+        if (!state.icon && additional.icon) {
+            state.icon = true
+            primary.icon = additional.icon
+        }
+        state.downloads += additional.downloads
+        primary.details['Downloads'] = state.downloads.toString()
+        for (const [key, value] of Object.entries(additional.links)) {
+            if (!primary.links.hasOwnProperty(key)) {
+                primary.links[key] = value
+            }
+        }
+        if (!state.description) {
+            state.description = true
+            primary.description = additional.description
+        }
+
+        await updateMod(primary)
+    }
+
+    await findOnModrinth(file, async link => {
+        primary.modrinth = link
+        await updateMod(primary)
+    }, callback)
+    await findOnCurseforge(file, async link => {
+        primary.curseforge = link
+        await updateMod(primary)
+    }, callback)
+}
+
+async function analyse(entries: Entry[], mods: AnalysedMod[], analyser: ModAnalyser) {
+    const files = entries.filter((entry) => entry.filename === analyser.file)
+
+    for (const file of files) {
+        if (file.directory) continue
+
+        try {
+            const writer = new TextWriter()
+            const data = await file.getData(writer)
+
+            let info: any
+            switch (analyser.format) {
+                case 'json':
+                    info = JSON.parse(data)
+                    break
+                case 'toml':
+                    info = toml(data)
+                    break
+            }
+
+            for (const mod of analyser.parse(info)) {
+                mods.push(mod)
+            }
+        } catch (e) {
+            console.error('Error while parsing mod file', e)
+        }
     }
 }
 
-async function findOnModrinth(button: HTMLAnchorElement, file: Blob) {
-    const sha512 = await hash('sha-512', file)
-
-    versionFromHash({
-        hash: sha512,
-        algorithm: 'sha512',
-        multiple: false
-    }, response => {
-        console.log(response)
-        button.href = `https://modrinth.com/mod/${response.project_id}/version/${response.id}`
-        button.hidden = false
-    })
-}
-
-async function findOnCurseforge(button: HTMLAnchorElement, file: Blob) {
-    const fingerprint = await hash('curseforge', file)
-
-    matchFingerprint(
-        fingerprint,
-        response => {
-            getMod(
-                response.file.modId,
-                modResponse => {
-                    button.href = `https://www.curseforge.com/minecraft/mc-mods/${modResponse.slug}/files/${response.file.id}`
-                    button.hidden = false
-                }
-            )
-        })
-}
-
-type FileType = 'json' | 'toml'
-
-async function analyse(writer: TextWriter, entries: Entry[], file: string, loader: Loader, type: FileType, callback: (info: any) => Analysis): Promise<AnalysisWithLoader | null> {
-    const entry = entries.find((entry) => entry.filename === file)
-    if (entry === undefined || entry.directory)
-        return null
-
-    const data = await entry.getData(writer)
-
-    let info: any
-    try {
-        switch (type) {
-            case 'json':
-                info = JSON.parse(data)
-                break
-            case 'toml':
-                info = toml(data)
-                break
-        }
-    } catch (e) {
-        return null
+async function updateMod(mod: ModInfo) {
+    for (let i = mod.element.childNodes.length - 1; i >= 0; i--) {
+        mod.element.childNodes[i].remove()
     }
 
-    const analysis = callback(info) as AnalysisWithLoader
-    analysis.loader = loader
-    return analysis
-}
-
-function analyseFabricMod(info: any): Analysis {
-    let analysis: Analysis = {
-        authors: [],
-        contributors: [],
-        links: {}
-    }
-
-    try {
-
-        if (typeof info.name === 'string') {
-            analysis.name = info.name
-        }
-
-        if (typeof info.id === 'string') {
-            analysis.id = info.id
-        }
-
-        if (typeof info.icon === 'string') {
-            analysis.icon = info.icon
-        }
-
-        if (Array.isArray(info.authors)) {
-            for (const author of info.authors) {
-                if (typeof author === 'string') {
-                    analysis.authors.push(author)
-                } else if (typeof author.name === 'string') {
-                    analysis.authors.push(author.name)
-                }
-            }
-        }
-
-        if (Array.isArray(info.contributors)) {
-            for (const contributor of info.contributors) {
-                if (typeof contributor === 'string') {
-                    analysis.authors.push(contributor)
-                } else if (typeof contributor.name === 'string') {
-                    analysis.authors.push(contributor.name)
-                }
-            }
-        }
-
-        if (typeof info.description === 'string') {
-            analysis.description = info.description
-        }
-
-        if (info.contact && typeof info.contact === 'object') {
-            for (const [key, value] of Object.entries(info.contact)) {
-                analysis.links[capitalize(key)] = value as string
-            }
-        }
-
-        if (typeof info.version === 'string') {
-            analysis.version = info.version
-        }
-
-    } catch (e) {
-        console.error('Error while analysing Fabric Mod', e)
-    }
-
-    return analysis
-}
-
-function analyseForgeMod(info: any): Analysis {
-    let analysis: Analysis = {
-        authors: [],
-        contributors: [],
-        links: {}
-    }
-
-    try {
-
-        if (typeof info.issueTrackerURL === 'string') {
-            analysis.links['Issues'] = info.issueTrackerURL
-        }
-
-        if (Array.isArray(info.mods)) {
-
-            if (typeof info.mods[0].displayName === 'string') {
-                analysis.name = info.mods[0].displayName
-            }
-
-            if (typeof info.mods[0].modId === 'string') {
-                analysis.id = info.mods[0].modId
-            }
-
-            if (typeof info.mods[0].logoFile === 'string') {
-                analysis.icon = info.mods[0].logoFile
-            }
-
-            if (typeof info.mods[0].authors === 'string') {
-                analysis.authors.push(info.mods[0].authors)
-            }
-
-            if (typeof info.mods[0].description === 'string') {
-                analysis.description = info.mods[0].description
-            }
-
-            if (typeof info.mods[0].displayURL === 'string') {
-                analysis.links['Homepage'] = info.mods[0].displayURL
-            }
-
-            if (typeof info.mods[0].version === 'string') {
-                analysis.version = info.mods[0].version
-            }
-
-        }
-    } catch (e) {
-        console.error('Error while analysing Forge Mod', e)
-    }
-
-    console.log(analysis)
-
-    return analysis
-}
-
-function analyseOldForgeMod(info: any): Analysis {
-    let analysis: Analysis = {
-        authors: [],
-        contributors: [],
-        links: {}
-    }
-
-    try {
-        if (Array.isArray(info)) {
-
-            console.log(info[0])
-
-            if (typeof info[0].name === 'string') {
-                analysis.name = info[0].name
-            }
-
-            if (typeof info[0].modid === 'string') {
-                analysis.id = info[0].modid
-            }
-
-            if (typeof info[0].logoFile === 'string') {
-                analysis.icon = info[0].logoFile
-            }
-
-            if (Array.isArray(info[0].authorList)) {
-                for (const author of info[0].authorList) {
-                    if (typeof author === 'string') {
-                        analysis.authors.push(author)
-                    }
-                }
-            }
-
-            if (typeof info[0].description === 'string') {
-                analysis.description = info[0].description
-            }
-
-            if (typeof info[0].url === 'string') {
-                analysis.links['URL'] = info[0].displayURL
-            }
-
-            if (typeof info[0].version === 'string') {
-                analysis.version = info[0].version
-            }
-
-        }
-    } catch (e) {
-        console.error('Error while analysing Forge Mod', e)
-    }
-
-    console.log(analysis)
-
-    return analysis
-}
-
-async function showMod(mod: Mod | ModError) {
-    const container = document.createElement('div')
-    container.classList.add('mod-container')
+    mod.element.classList.add('mod-container')
 
     const div = document.createElement('div')
     div.classList.add('mod', 'corner-8')
 
-    if (mod.error) {
-        div.classList.add('error')
+    const header = document.createElement('div')
+    header.classList.add('header')
 
-        const message = document.createElement('div')
-        message.classList.add('message')
-        message.appendChild(await text(mod.message, FONT_NORMAL))
+    const icon = document.createElement('img')
+    icon.classList.add('icon', 'corner-1')
+    icon.src = mod.icon
+    header.appendChild(icon)
 
-        div.appendChild(message)
-    } else {
-        const header = document.createElement('div')
-        header.classList.add('header')
+    const name = document.createElement('div')
+    name.classList.add('name')
 
-        const icon = document.createElement('img')
-        icon.classList.add('icon', 'corner-1')
-        icon.src = mod.icon
-        header.appendChild(icon)
+    const title = document.createElement('span')
+    title.classList.add('title')
+    title.appendChild(await text({
+        content: mod.name,
+        color: style.text
+    }, FONT_BIG))
+    name.appendChild(title)
 
-        const name = document.createElement('div')
-        name.classList.add('name')
+    const slug = document.createElement('span')
+    slug.classList.add('slug')
+    slug.appendChild(await text({
+        content: mod.id,
+        color: style.altText
+    }, FONT_SMALL, true))
+    name.appendChild(slug)
 
-        const title = document.createElement('span')
-        title.classList.add('title')
-        title.appendChild(await text({
-            content: mod.name,
+    header.appendChild(name)
+
+    const creditsIntro = document.createElement('div')
+    creditsIntro.classList.add('credits-intro')
+    creditsIntro.appendChild(await text({
+        content: '-----',
+        color: style.altText
+    }, FONT_SMALL))
+    header.appendChild(creditsIntro)
+
+    const credits = document.createElement('div')
+    credits.classList.add('credits')
+
+    let firstCredit = true
+    for (const modAuthor of mod.authors) {
+        const author = document.createElement('span')
+        author.classList.add('author')
+        author.appendChild(await text({
+            content: (firstCredit ? '' : ', ') + modAuthor,
             color: style.text
-        }, FONT_BIG))
-        name.appendChild(title)
+        }))
+        firstCredit = false
+        credits.appendChild(author)
+    }
 
-        const slug = document.createElement('span')
-        slug.classList.add('slug')
-        slug.appendChild(await text({
-            content: mod.id,
+    for (const modContributor of mod.contributors) {
+        const contributor = document.createElement('span')
+        contributor.classList.add('contributor')
+        contributor.appendChild(await text({
+            content: (firstCredit ? '' : ', ') + modContributor,
             color: style.altText
-        }, FONT_SMALL, true))
-        name.appendChild(slug)
+        }))
+        firstCredit = false
+        credits.appendChild(contributor)
+    }
 
-        header.appendChild(name)
+    header.appendChild(credits)
 
-        const creditsIntro = document.createElement('div')
-        creditsIntro.classList.add('credits-intro')
-        creditsIntro.appendChild(await text({
-            content: '-----',
-            color: style.altText
-        }, FONT_SMALL))
-        header.appendChild(creditsIntro)
+    div.appendChild(header)
 
-        const credits = document.createElement('div')
-        credits.classList.add('credits')
+    const links = document.createElement('div')
+    links.classList.add('links')
 
-        let firstCredit = true
-        for (const modAuthor of mod.authors) {
-            const author = document.createElement('span')
-            author.classList.add('author')
-            author.appendChild(await text({
-                content: (firstCredit ? '' : ', ') + modAuthor,
-                color: style.text
-            }))
-            firstCredit = false
-            credits.appendChild(author)
-        }
+    for (const [name, href] of Object.entries(mod.links)) {
+        links.appendChild(await textButton(name, href))
+    }
 
-        for (const modContributor of mod.contributors) {
-            const contributor = document.createElement('span')
-            contributor.classList.add('contributor')
-            contributor.appendChild(await text({
-                content: (firstCredit ? '' : ', ') + modContributor,
+    div.appendChild(links)
+
+    const description = document.createElement('div')
+    description.classList.add('description')
+    for (const word of mod.description.replace('\n', ' ').split(' ')) {
+        description.appendChild(await text({
+            content: word + ' ',
+            color: style.text
+        }))
+    }
+    div.appendChild(description)
+
+    const details = document.createElement('div')
+    details.classList.add('details')
+
+    let first = true
+    for (const [key, value] of Object.entries(mod.details)) {
+        if (first) {
+            first = false
+        } else {
+            details.appendChild(await text({
+                content: ', ',
                 color: style.altText
-            }))
-            firstCredit = false
-            credits.appendChild(contributor)
+            }, FONT_SMALL))
         }
-
-        header.appendChild(credits)
-
-        div.appendChild(header)
-
-        const links = document.createElement('div')
-        links.classList.add('links')
-
-        for (const [name, href] of Object.entries(mod.links)) {
-            links.appendChild(await textButton(name, href))
-        }
-
-        div.appendChild(links)
-
-        const description = document.createElement('div')
-        description.classList.add('description')
-        for (const word of mod.description.replace('\n', ' ').split(' ')) {
-            description.appendChild(await text({
-                content: word + ' ',
-                color: style.text
-            }))
-        }
-        div.appendChild(description)
-
-        const footer = document.createElement('div')
-        footer.classList.add('footer')
-
-        const version = document.createElement('div')
-        version.classList.add('version')
-        version.appendChild(await text({
-            content: mod.version,
+        details.appendChild(await text({
+            content: key + ': ',
             color: style.altText
         }, FONT_SMALL))
-        footer.appendChild(version)
-
-        const downloads = document.createElement('div')
-        downloads.classList.add('downloads')
-        downloads.appendChild(mod.curseforge)
-        downloads.appendChild(mod.modrinth)
-        footer.appendChild(downloads)
-
-        div.appendChild(footer)
+        details.appendChild(await text({
+            content: value,
+            color: style.text
+        }, FONT_SMALL))
     }
 
-    container.appendChild(div)
+    div.appendChild(details)
 
-    const show = document.getElementById('show-mod')!
-    if (show.childElementCount !== 0) {
-        show.children[0].remove()
+    const footer = document.createElement('div')
+    footer.classList.add('footer')
+
+    const version = document.createElement('div')
+    version.classList.add('version')
+    version.appendChild(await text({
+        content: mod.version,
+        color: style.altText
+    }, FONT_SMALL))
+    footer.appendChild(version)
+
+    const downloads = document.createElement('div')
+    downloads.classList.add('downloads')
+    if (mod.curseforge) {
+        downloads.appendChild(await iconButton('curseforge', mod.curseforge))
     }
-    show.appendChild(container)
+    if (mod.modrinth) {
+        downloads.appendChild(await iconButton('modrinth', mod.modrinth))
+    }
+    footer.appendChild(downloads)
+
+    div.appendChild(footer)
+
+    mod.element.appendChild(div)
 }
 
 export default load
