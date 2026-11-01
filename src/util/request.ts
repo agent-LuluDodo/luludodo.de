@@ -1,20 +1,62 @@
-export default function request(method: 'GET', url: string, body: object | null, headers: Record<string, string> | null, onsuccess: (response: any) => unknown) {
+type RequestSettings = {
+    method: 'GET' | 'POST',
+    url: string,
+    body?: object,
+    query?: Record<string, string | number | boolean | undefined>,
+    headers?: Record<string, string>,
+    relay?: true,
+    onsuccess: (response: any) => unknown,
+    onerror?: () => unknown
+}
+
+export default function request(settings: RequestSettings) {
     const request = new XMLHttpRequest()
-    request.onreadystatechange = function () {
-        if (request.readyState === XMLHttpRequest.DONE && request.status === 200) {
+    request.onreadystatechange = e => {
+        if (request.readyState === XMLHttpRequest.DONE) {
             if (request.status === 200) {
-                onsuccess(JSON.parse(request.responseText))
+                settings.onsuccess(JSON.parse(request.responseText))
             } else {
-                console.error(`Request for '${url}' failed: ${request.status} ${request.statusText}`)
+                console.error(`Request for '${settings.url}' failed: ${request.status} ${request.statusText}`)
+                if (settings.onerror) settings.onerror()
+            }
+            e.preventDefault()
+        }
+    }
+
+    let url = settings.url
+    if (settings.query !== undefined) {
+        let first = true
+        for (const [key, value] of Object.entries(settings.query)) {
+            if (value !== undefined) {
+                if (first) {
+                    url += '?'
+                    first = false
+                } else {
+                    url += '&'
+                }
+                url += `${key}=${encodeURIComponent(value)}`
             }
         }
     }
-    request.open(method, url)
+
+    if (settings.relay) {
+        request.open(settings.method, `https://cors-relay.luludodo.de?api=${encodeURIComponent(url)}`)
+    } else {
+        request.open(settings.method, url)
+    }
+
+    request.setRequestHeader('User-Agent', 'agent-LuluDodo/luludodo.de (contact@luludodo.de)')
     request.setRequestHeader('Accept', 'application/json')
-    if (headers !== null) {
-        for (const [key, value] of Object.entries(headers)) {
+    if (settings.headers !== undefined) {
+        for (const [key, value] of Object.entries(settings.headers)) {
             request.setRequestHeader(key, value)
         }
     }
-    request.send(body === null ? null : JSON.stringify(body))
+
+    if (settings.body === undefined || settings.body === null) {
+        request.send(null)
+    } else {
+        request.setRequestHeader('Content-Type', 'application/json')
+        request.send(JSON.stringify(settings.body))
+    }
 }

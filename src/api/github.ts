@@ -60,6 +60,11 @@ type Release = {
     body: string,
 }
 
-export function getReleases(user: string, id: string, onsuccess: (response: Release[]) => unknown) {
-    request('GET', `https://api.github.com/repos/${user}/${id}/releases`, null, null, onsuccess)
+export function getReleases(user: string, id: string, onsuccess: (response: Release[]) => unknown, onerror?: () => unknown) {
+    request({
+        method: 'GET',
+        url: `https://api.github.com/repos/${encodeURI(user)}/${encodeURI(id)}/releases`,
+        onsuccess,
+        onerror,
+    })
 }

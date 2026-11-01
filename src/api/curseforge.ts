@@ -1,7 +1,7 @@
 import request from '../util/request.ts';
 
-type Response = {
-    data: Project[],
+type RealProjectResponse = {
+    data: ProjectResponse[],
     pagination: {
         index: number,
         pageSize: number,
@@ -10,7 +10,7 @@ type Response = {
     }
 }
 
-type Project = {
+type ProjectResponse = {
     id: number,
     gameId: number,
     name: string,
@@ -46,49 +46,7 @@ type Project = {
         url: string,
     }[],
     mainFileId: number,
-    latestFiles: {
-        id: number,
-        gameId: number,
-        modId: number,
-        isAvailable: boolean,
-        displayName: string,
-        fileName: string,
-        releaseType: number,
-        fileStatus: number,
-        hashes: {
-            value: string,
-            algo: number
-        }[],
-        fileData: string,
-        fileLength: number,
-        downloadCount: number,
-        fileSizeOnDisk: number,
-        downloadUrl: string,
-        gameVersions: string[],
-        sortableGameVersions: {
-            gameVersionName: string,
-            gameVersionPadded: string,
-            gameVersion: string,
-            gameVersionReleaseDate: string,
-            gameVersionTypeId: number,
-        },
-        dependencies: {
-            modId: number,
-            relationType: number,
-        },
-        exposeAsAlternative: boolean,
-        parentProjectFileId: number,
-        alternateFileId: number,
-        isServerPack: boolean,
-        serverPackFileId: number,
-        isEarlyAccessContent: boolean,
-        earlyAccessEndDate: string,
-        fileFingerprint: number,
-        modules: {
-            name: string,
-            fingerprint: number,
-        }[],
-    }[],
+    latestFiles: File[],
     latestFilesIndexes: {
         gameVersion: string,
         fileId: number,
@@ -115,6 +73,50 @@ type Project = {
     rating: number,
 }
 
+type File = {
+    id: number,
+    gameId: number,
+    modId: number,
+    isAvailable: boolean,
+    displayName: string,
+    fileName: string,
+    releaseType: number,
+    fileStatus: number,
+    hashes: {
+        value: string,
+        algo: number,
+    }[],
+    fileDate: string,
+    fileLength: number,
+    downloadCount: number,
+    fileSizeOnDisk: number,
+    downloadUrl: string,
+    gameVersions: string[],
+    sortableGameVersions: {
+        gameVersionName: string,
+        gameVersionPadded: string,
+        gameVersion: string,
+        gameVersionReleaseDate: string,
+        gameVersionTypeId: number,
+    }[],
+    dependencies: {
+        modId: number,
+        relationType: number,
+    }[],
+    exposeAsAlternative: boolean,
+    parentProjectFileId: number,
+    alternateFileId: number,
+    isServerPack: boolean,
+    serverPackFileId: number,
+    isEarlyAccessContent: boolean,
+    earlyAccessEndDate: string,
+    fileFingerprint: number,
+    modules: {
+        name: string,
+        fingerprint: number,
+    }[],
+}
+
 type Category = {
     id: number,
     gameId: number,
@@ -135,8 +137,74 @@ type Author = {
     url: string,
 }
 
-export function getProject(id: string, onsuccess: (response: Project) => unknown) {
-    request('GET', `https://api.curseforge.com/v1/mods/search?gameId=432&slug=${id}`, null, {
-        'x-api-key': '$2a$10$bL4bIL5pUWqfcO7KQtnMReakwtfHbNKh6v1uTpKlzhwoueEJQnPnm'
-    }, (response: Response) => onsuccess(response.data[0]))
+const API_KEY = '$2a$10$bL4bIL5pUWqfcO7KQtnMReakwtfHbNKh6v1uTpKlzhwoueEJQnPnm'
+
+export function getProject(id: string, onsuccess: (response: ProjectResponse) => unknown, onerror?: () => unknown) {
+    request({
+        method: 'GET',
+        url: 'https://api.curseforge.com/v1/mods/search',
+        query: {
+            gameId: 432,
+            slug: id,
+        },
+        headers: {
+            'x-api-key': API_KEY
+        },
+        onsuccess: (response: RealProjectResponse) => onsuccess(response.data[0]),
+        onerror,
+    })
+}
+
+type RealFingerprintResponse = {
+    data: {
+        isCacheBuilt: boolean,
+        exactMatches: FingerprintResponse[],
+        // and more stuff (https://docs.curseforge.com/rest-api/#get-fingerprints-matches-by-game-id)
+    }
+}
+
+type FingerprintResponse = {
+    id: number,
+    file: File,
+    latestFiles: File[],
+}
+
+export function matchFingerprint(fingerprint: number, onsuccess: (response: FingerprintResponse) => unknown, onerror?: () => unknown) {
+    request({
+        method: 'POST',
+        url: `https://api.curseforge.com/v1/fingerprints/432`,
+        body: {
+            fingerprints: [
+                fingerprint
+            ]
+        },
+        headers: {
+            'x-api-key': API_KEY
+        },
+        relay: true,
+        onsuccess: (response: RealFingerprintResponse) => {
+            if (response.data.exactMatches.length >= 1) {
+                onsuccess(response.data.exactMatches[0])
+            }
+        },
+        onerror,
+    })
+}
+
+type RealModResponse = {
+    data: ModResponse,
+}
+
+type ModResponse = ProjectResponse
+
+export function getMod(id: number, onsuccess: (reponse: ModResponse) => unknown, onerror?: () => unknown) {
+    request({
+        method: 'GET',
+        url: `https://api.curseforge.com/v1/mods/${id}`,
+        headers: {
+            'x-api-key': API_KEY
+        },
+        onsuccess: (response: RealModResponse)=> onsuccess(response.data),
+        onerror
+    })
 }

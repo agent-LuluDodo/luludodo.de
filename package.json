@@ -21,6 +21,8 @@
     "workerd@1.20261023.1": true
   },
   "dependencies": {
-    "@zip.js/zip.js": "^2.24.0"
+    "@zip.js/zip.js": "^2.24.0",
+    "cf-fingerprint": "github:arschedev/cf-fingerprint",
+    "js-toml": "^2.0.1"
   }
 }

@@ -1281,6 +1281,10 @@ body:has(#local-storage-popup) {
         grid-area: name;
         margin: 9px 0 9px 21px;
     }
+    
+    .slug > .text {
+        padding-left: 9px;
+    }
 
     .credits-intro {
         grid-area: credits-intro;
@@ -1314,15 +1318,38 @@ body:has(#local-storage-popup) {
     }
 
     .description {
-        margin: 15px -12px 15px 0;
+        margin: 15px -12px 9px 0;
 
         canvas {
             display: inline-block;
         }
     }
+    
+    .footer {
+        display: flex;
+        flex-direction: row;
+        height: 39px;
+    }
 
     .version {
-        margin: 9px 0 -9px;
+        margin: 12px 9px -12px;
+        flex: 1 1 auto;
+    }
+    
+    .downloads {
+        display: flex;
+        flex-direction: row;
+        gap: 9px;
+        
+        [hidden] {
+            display: none;
+        }
+    }
+    
+    .error {
+        width: max-content;
+        background-color: #9e2927;
+        padding: 30px 24px 24px 33px;
     }
 }
 
