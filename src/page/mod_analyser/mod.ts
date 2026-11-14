@@ -2,7 +2,7 @@ export type ModType = 'mod' | 'modpack'
 
 export type ModpackFormat = 'mrpack'
 
-export type ModLoader = 'fabric' | 'forge' | 'neoforge' | 'mrpack' | 'quilt'
+export type ModLoader = 'fabric' | 'forge' | 'neoforge' | 'quilt'
 
 export type AnalysedMod = {
     type: ModType,
@@ -16,6 +16,8 @@ export type AnalysedMod = {
     description?: string,
     links?: Record<string, string>,
     version?: string,
+    mods?: number,
+    sha512?: string,
 }
 
 export type FileFormat = 'json' | 'toml'
@@ -39,6 +41,7 @@ export type ModInfo = {
     version: string,
     modrinth?: string,
     curseforge?: string,
+    sha512?: string,
 }
 
 export type InfoState = {
@@ -56,6 +59,10 @@ export type AdditionalInfo = {
     description: string,
 }
 
+export type LinkCallback = (href: string) => Promise<void>
+export type AdditionalInfoCallback = (additions: AdditionalInfo) => Promise<void>
+export type AuthorCallback = (authors: string[], contributors: string[]) => Promise<void>
+
 export const typeToName: Record<ModType, string> = {
     mod: 'Mod',
     modpack: 'Modpack',
@@ -69,6 +76,5 @@ export const loaderToName: Record<ModLoader, string> = {
     fabric: 'Fabric',
     forge: 'Forge',
     neoforge: 'NeoForge',
-    mrpack: 'Modrinth Mod Pack',
     quilt: 'Quilt'
 }

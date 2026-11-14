@@ -1,8 +1,8 @@
 import {getMod, matchFingerprint} from '../../api/curseforge.ts';
 import hash from '../../util/hash.ts';
-import type {AdditionalInfo} from './mod.ts';
+import type {AdditionalInfoCallback, LinkCallback} from './mod.ts';
 
-export default async function findOnCurseforge(file: Blob, linkCallback: (href: string) => Promise<void>, callback: (addition: AdditionalInfo) => Promise<void>) {
+export default async function findOnCurseforge(file: Blob, linkCallback: LinkCallback, callback: AdditionalInfoCallback) {
     const fingerprint = await hash('curseforge', file)
 
     matchFingerprint(

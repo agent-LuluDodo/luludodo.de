@@ -27,10 +27,7 @@ import findOnModrinth from './mod_analyser/modrinth.ts';
 import findOnCurseforge from './mod_analyser/curseforge.ts';
 import quilt from './mod_analyser/quilt.ts';
 import mrpack from './mod_analyser/mrpack.ts';
-
-// TODO: multi-file d'n'd support
-//       mod pack support - WIP
-//       Jar-in-Jar support
+import placeholderInfo from "./mod_analyser/placeholder_info.ts";
 
 const style: Style = {
     text: '#eeffff',
@@ -89,11 +86,13 @@ async function openFile(file: File) {
     let infos: ModInfo[] = []
 
     try {
-
-        await analyseFile(file, infos)
-
+        await analyseZip(file, infos)
     } catch (e) {
-        console.error('Error analysing file', e)
+        console.error('Error analysing zip file', e)
+        infos.push(placeholderInfo(
+            'Invalid File',
+            'Your file might be corrupted or unsupported!'
+        ))
     }
 
     for (const info of infos) {
@@ -102,7 +101,7 @@ async function openFile(file: File) {
     }
 }
 
-async function analyseFile(file: Blob, infos: ModInfo[]) {
+async function analyseZip(file: Blob, infos: ModInfo[]) {
     const blobReader = new BlobReader(file)
     const zipReader = new ZipReader(blobReader)
 
@@ -140,6 +139,9 @@ async function analyseFile(file: Blob, infos: ModInfo[]) {
         if (mod.loader) {
             details['Loader'] = loaderToName[mod.loader]
         }
+        if (mod.mods) {
+            details['Mods'] = mod.mods.toString()
+        }
 
         const info: ModInfo = {
             element: document.createElement('div'),
@@ -151,7 +153,8 @@ async function analyseFile(file: Blob, infos: ModInfo[]) {
             description: mod.description ?? '-',
             links: mod.links ?? {},
             details,
-            version: mod.version ?? 'unknown'
+            version: mod.version ?? 'unknown',
+            sha512: mod.sha512,
         }
 
         if (first) {
@@ -169,18 +172,10 @@ async function analyseFile(file: Blob, infos: ModInfo[]) {
     }
 
     if (first) {
-        const info = {
-            element: document.createElement('div'),
-            name: 'Unsupported Mod',
-            id: 'unknown',
-            icon: '/icon/mod-not-supported.png',
-            authors: [],
-            contributors: [],
-            description: 'Couldn\'t find mod metadata!',
-            links: {},
-            details: {},
-            version: 'unknown',
-        }
+        const info = placeholderInfo(
+            'Unsupported Mod',
+            'Couldn\'t find mod metadata!'
+        )
 
         infos.push(info)
 
@@ -193,38 +188,78 @@ async function analyseFile(file: Blob, infos: ModInfo[]) {
         }
     }
 
-    async function callback(additional: AdditionalInfo) {
-        if (!state.name) {
-            state.name = true
-            primary.name = additional.name
-        }
-        if (!state.icon && additional.icon) {
-            state.icon = true
-            primary.icon = additional.icon
-        }
-        state.downloads += additional.downloads
-        primary.details['Downloads'] = state.downloads.toString()
-        for (const [key, value] of Object.entries(additional.links)) {
-            if (!primary.links.hasOwnProperty(key)) {
-                primary.links[key] = value
+    function callback_gen(state: InfoState, info: ModInfo) {
+        return async function callback(additional: AdditionalInfo) {
+            if (!state.name) {
+                state.name = true
+                info.name = additional.name
             }
+            if (!state.icon && additional.icon) {
+                state.icon = true
+                info.icon = additional.icon
+            }
+            state.downloads += additional.downloads
+            info.details['Downloads'] = state.downloads.toString()
+            for (const [key, value] of Object.entries(additional.links)) {
+                if (!info.links.hasOwnProperty(key)) {
+                    info.links[key] = value
+                }
+            }
+            if (!state.description) {
+                state.description = true
+                info.description = additional.description
+            }
+
+            await updateMod(info)
         }
-        if (!state.description) {
-            state.description = true
-            primary.description = additional.description
-        }
+    }
+
+    async function authorCallback(authors: string[], contributors: string[]) {
+        primary.authors = authors
+        primary.contributors = contributors
 
         await updateMod(primary)
     }
 
-    await findOnModrinth(file, async link => {
-        primary.modrinth = link
-        await updateMod(primary)
-    }, callback)
-    await findOnCurseforge(file, async link => {
-        primary.curseforge = link
-        await updateMod(primary)
-    }, callback)
+    await findOnModrinth(
+        file,
+        async link => {
+            primary.modrinth = link
+            await updateMod(primary)
+        },
+        callback_gen(state!, primary!),
+        primary!.details['Format'] === 'Modrinth' ?
+            authorCallback :
+            undefined,
+    )
+
+    await findOnCurseforge(
+        file,
+        async link => {
+            primary.curseforge = link
+            await updateMod(primary)
+        },
+        callback_gen(state!, primary!),
+    )
+
+    for (const info of infos) {
+        if (info !== primary! && info.sha512) {
+            const state = {
+                name: false,
+                icon: false,
+                downloads: 0,
+                description: false,
+            }
+            await findOnModrinth(
+                info.sha512,
+                async link => {
+                    info.modrinth = link
+                    await updateMod(info)
+                },
+                callback_gen(state, info),
+            )
+        }
+    }
 }
 
 async function analyse(entries: Entry[], mods: AnalysedMod[], analyser: ModAnalyser) {

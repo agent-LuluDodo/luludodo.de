@@ -139,6 +139,33 @@ type File = {
     file_type?: string,
 }
 
+type ProjectTeamMembersResponse = {
+    team_id: string,
+    user: User,
+    role: string,
+    payouts_split?: number,
+    ordering?: number,
+}[]
+
+type User = {
+    username: string,
+    name?: string,
+    email?: string,
+    bio?: string,
+    payout_data?: PayoutData,
+    id: string,
+    avatar_url?: string,
+    created: string,
+    role: string,
+    badges?: number,
+    auth_providers?: string[],
+    email_verified?: boolean,
+    has_password?: boolean,
+    has_totp?: boolean,
+}
+
+type PayoutData = unknown
+
 export function getProject(id: string, onsuccess: (response: ProjectResponse) => unknown, onerror?: () => unknown) {
     request({
         method: 'GET',
@@ -182,6 +209,15 @@ export function versionFromHash(settings: HashRequest, onsuccess: (response: Has
             algorithm: settings.algorithm,
             multiple: settings.multiple,
         },
+        onsuccess,
+        onerror,
+    })
+}
+
+export function getProjectTeamMembers(slugOrId: string, onsuccess: (response: ProjectTeamMembersResponse) => unknown, onerror?: () => unknown) {
+    request({
+        method: 'GET',
+        url: `https://api.modrinth.com/v2/project/${slugOrId}/members`,
         onsuccess,
         onerror,
     })
